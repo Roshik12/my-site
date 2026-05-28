@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy – QuickShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
+      --accent: #7c6aff; --accent2: #a78bfa; --accent-glow: rgba(124,106,255,0.25);
+      --text: #f0f0f8; --text-muted: #6b6b80; --text-dim: #3a3a4a;
+      --green: #4ade80; --yellow: #fbbf24; --red: #f87171;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: -200px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(124,106,255,0.10) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    body::after { content: ''; position: fixed; bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    
+    .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-badge { background: var(--accent-glow); border: 1px solid rgba(124,106,255,0.3); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+
+    .page-wrap { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 64px 24px 100px; }
+    .page-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent2); font-family: 'Space Mono', monospace; margin-bottom: 14px; }
+    .page-title { font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+    .page-sub { font-size: 16px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; }
+    .updated-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 11px; color: var(--text-dim); font-family: 'Space Mono', monospace; margin-bottom: 56px; }
+
+    /* Summary cards */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 60px; }
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .summary-icon { font-size: 22px; margin-bottom: 10px; display: block; }
+    .summary-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+    .summary-card p { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+    /* Table of contents */
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 48px; }
+    .toc-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); font-family: 'Space Mono', monospace; margin-bottom: 14px; }
+    .toc ol { list-style: none; counter-reset: toc; }
+    .toc li { counter-increment: toc; display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .toc li:last-child { border-bottom: none; padding-bottom: 0; }
+    .toc li::before { content: counter(toc, decimal-leading-zero); font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-dim); flex-shrink: 0; padding-top: 1px; }
+    .toc li a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .toc li a:hover { color: var(--accent2); }
+
+    /* Prose */
+    .prose section { margin-bottom: 52px; }
+    .prose h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .prose h2 .section-num { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-dim); font-weight: 400; }
+    .prose p { font-size: 14px; color: var(--text-muted); line-height: 1.85; margin-bottom: 14px; }
+    .prose strong { color: var(--text); font-weight: 600; }
+    .prose a { color: var(--accent2); text-decoration: none; }
+    .prose a:hover { text-decoration: underline; }
+    .prose ul { list-style: none; margin: 14px 0 14px 0; }
+    .prose ul li { font-size: 14px; color: var(--text-muted); line-height: 1.7; padding: 6px 0 6px 20px; position: relative; border-bottom: 1px solid var(--border); }
+    .prose ul li:last-child { border-bottom: none; }
+    .prose ul li::before { content: '·'; position: absolute; left: 0; color: var(--accent); font-size: 18px; line-height: 1.4; }
+
+    .highlight-box { background: rgba(124,106,255,0.06); border: 1px solid rgba(124,106,255,0.18); border-radius: 12px; padding: 18px 20px; margin: 18px 0; font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+    .highlight-box strong { color: var(--accent2); }
+
+    footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr 1fr; } .nav-links a:not(.active) { display: none; } }
+  
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+    .nav-logo img { height: 27px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .nav-links { display: flex; gap: 22px; align-items: center; margin-left: 28px; }
+    .nav-links a { color: #6b6b80; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
+    .nav-links a:hover { color: #f0f0f8; }
+    .nav-links a.nav-active { color: #f0f0f8; }
+    .nav-links a.nav-chat { color: #a78bfa; font-weight: 600; }
+    .nav-links a.nav-chat:hover { color: #c4b5fd; }
+    .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
+
+  </style>
+</head>
+<body>
+    <nav>
+    <div style="display:flex;align-items:center;flex:1;">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="QuickShare logo">
+        <span>QuickShare</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="">Home</a>
+        <a href="chat.html" class="nav-chat">Chat</a>
+        <a href="about.html" class="">About</a>
+        <a href="contact.html" class="">Contact</a>
+        <a href="privacy.html" class="nav-active">Privacy</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="nav-badge">FREE</span>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="page-label">Privacy Policy</div>
+    <h1 class="page-title">Your data,<br>kept simple.</h1>
+    <p class="page-sub">QuickShare is designed with minimal data collection. Here's everything we collect, why, and how long we keep it.</p>
+    <div class="updated-tag">Last updated: May 2026</div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span class="summary-icon">🙈</span>
+        <h3>No accounts</h3>
+        <p>We never ask for your name, email, or any personal account details.</p>
+      </div>
+      <div class="summary-card">
+        <span class="summary-icon">⏳</span>
+        <h3>Auto-deleted</h3>
+        <p>All text content is automatically purged 7 days after the last save.</p>
+      </div>
+      <div class="summary-card">
+        <span class="summary-icon">🚫</span>
+        <h3>Not sold</h3>
+        <p>We do not sell, rent, or share your data with third parties for advertising.</p>
+      </div>
+      <div class="summary-card">
+        <span class="summary-icon">📍</span>
+        <h3>IP-keyed only</h3>
+        <p>Your public IP is used as a session key — not stored as a user profile.</p>
+      </div>
+    </div>
+
+    <div class="toc">
+      <div class="toc-label">Contents</div>
+      <ol>
+        <li><a href="#collect">What we collect</a></li>
+        <li><a href="#use">How we use it</a></li>
+        <li><a href="#storage">Storage &amp; retention</a></li>
+        <li><a href="#third-party">Third-party services</a></li>
+        <li><a href="#ads">Advertising</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#children">Children's privacy</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </div>
+
+    <div class="prose">
+      <section id="collect">
+        <h2><span class="section-num">01</span> What we collect</h2>
+        <p>QuickShare collects a minimal set of data to function. Here is a complete list:</p>
+        <ul>
+          <li><strong>Your public IP address</strong> — fetched from a third-party API (ipify.org) and used as a session key to associate your text with your session. It is not stored in a user profile or linked to any personal identity.</li>
+          <li><strong>The text you type</strong> — saved to a Firebase Realtime Database, keyed to a hashed representation of your IP address, and automatically deleted after 7 days.</li>
+          <li><strong>Timestamps</strong> — a last-saved timestamp is stored alongside your text to determine expiry.</li>
+          <li><strong>Browser telemetry (optional)</strong> — if ads are enabled, the advertising partner (Google AdSense) may collect standard browser signals such as browser type, device category, and coarse geolocation for ad serving. See Section 5.</li>
+        </ul>
+        <div class="highlight-box">
+          <strong>We do not collect:</strong> names, email addresses, account credentials, precise location data, browsing history, or any form of biometric data.
+        </div>
+      </section>
+
+      <section id="use">
+        <h2><span class="section-num">02</span> How we use it</h2>
+        <p>The data collected is used solely to deliver the core service:</p>
+        <ul>
+          <li>Your IP address is used to read and write your text session — nothing else.</li>
+          <li>Your text content is stored and retrieved so it can sync across devices on the same IP.</li>
+          <li>Timestamps are used exclusively to enforce the 7-day expiry rule.</li>
+        </ul>
+        <p>We do not use your data for profiling, behavioral analytics, or targeted marketing.</p>
+      </section>
+
+      <section id="storage">
+        <h2><span class="section-num">03</span> Storage &amp; retention</h2>
+        <p>Text content is stored in <strong>Google Firebase Realtime Database</strong>, hosted in the asia-southeast1 region. Data is encrypted in transit (HTTPS) and at rest.</p>
+        <p><strong>Retention:</strong> All text sessions are automatically deleted 7 days after the last save timestamp. No manual action is required on your part. Once deleted, data is unrecoverable.</p>
+        <p>If you clear your content using the "Clear" button in the editor, the data is immediately removed from the database.</p>
+      </section>
+
+      <section id="third-party">
+        <h2><span class="section-num">04</span> Third-party services</h2>
+        <p>QuickShare relies on the following third-party services to operate:</p>
+        <ul>
+          <li><strong>Google Firebase</strong> — real-time database and hosting infrastructure. Subject to <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+          <li><strong>ipify.org</strong> — public IP detection API. A single request is made on page load; no user data beyond the IP request is transmitted. Subject to <a href="https://www.ipify.org" target="_blank" rel="noopener">ipify's terms</a>.</li>
+          <li><strong>Google Fonts</strong> — font delivery via Google's CDN. Standard browser headers (IP, user-agent) are sent with font requests.</li>
+        </ul>
+      </section>
+
+      <section id="ads">
+        <h2><span class="section-num">05</span> Advertising</h2>
+        <p>QuickShare displays ad placements to support free access to the service. Ads are served through <strong>Google AdSense</strong>, which may use cookies and similar technologies to serve ads based on your prior visits to this or other websites.</p>
+        <p>You can opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google's ad settings</a> or by using the <a href="https://www.aboutads.info" target="_blank" rel="noopener">NAI opt-out tool</a>.</p>
+        <div class="highlight-box">
+          Ad placeholders are currently shown in the interface but no live AdSense code is active. When ads go live, this policy will be updated accordingly.
+        </div>
+      </section>
+
+      <section id="rights">
+        <h2><span class="section-num">06</span> Your rights</h2>
+        <p>Because QuickShare does not create user accounts or store personally identifiable information beyond your public IP as a session key, traditional data access requests (e.g., GDPR subject access requests) are difficult to fulfill definitively — we cannot match your identity to a session without your current public IP.</p>
+        <p>That said:</p>
+        <ul>
+          <li>You can <strong>delete your data at any time</strong> by clicking "Clear" in the editor.</li>
+          <li>All data is <strong>automatically deleted</strong> after 7 days regardless.</li>
+          <li>You can <a href="contact.html">contact us</a> with any privacy-related requests or concerns and we will do our best to assist.</li>
+        </ul>
+      </section>
+
+      <section id="children">
+        <h2><span class="section-num">07</span> Children's privacy</h2>
+        <p>QuickShare is not directed at children under 13. We do not knowingly collect any information from children. If you believe a child has provided data through the service, please <a href="contact.html">contact us</a> and we will delete it promptly.</p>
+      </section>
+
+      <section id="changes">
+        <h2><span class="section-num">08</span> Changes to this policy</h2>
+        <p>We may update this Privacy Policy from time to time. Changes will be reflected by the "Last updated" date at the top of this page. Continued use of QuickShare after changes are posted constitutes acceptance of the updated policy.</p>
+        <p>We will not make material changes that significantly expand data collection without providing prominent notice.</p>
+      </section>
+
+      <section id="contact">
+        <h2><span class="section-num">09</span> Contact</h2>
+        <p>For any privacy-related questions, requests, or concerns, please reach us at:</p>
+        <ul>
+          <li><strong>Email:</strong> <a href="mailto:privacy@quickshare.app">privacy@quickshare.app</a></li>
+          <li><strong>Contact form:</strong> <a href="contact.html">quickshare.app/contact</a></li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 quick/share · synced to your ip ·
+    <a href="about.html">about</a> · <a href="contact.html">contact</a> · <a href="privacy.html">privacy</a>
+  </footer>
+</body>
+</html>

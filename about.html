@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About – QuickShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
+      --accent: #7c6aff; --accent2: #a78bfa; --accent-glow: rgba(124,106,255,0.25);
+      --text: #f0f0f8; --text-muted: #6b6b80; --text-dim: #3a3a4a;
+      --green: #4ade80; --yellow: #fbbf24; --red: #f87171;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: -200px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    body::after { content: ''; position: fixed; bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    
+    .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-badge { background: var(--accent-glow); border: 1px solid rgba(124,106,255,0.3); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+
+    .page-wrap { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 64px 24px 100px; }
+    .page-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent2); font-family: 'Space Mono', monospace; margin-bottom: 14px; }
+    .page-title { font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); x: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+    .page-sub { font-size: 17px; color: var(--text-muted); line-height: 1.7; margin-bottom: 60px; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+    .prose h2 { font-size: 22px; font-weight: 700; margin-bottom: 12px; margin-top: 48px; }
+    .prose h2:first-child { margin-top: 0; }
+    .prose p { font-size: 15px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .prose strong { color: var(--text); font-weight: 600; }
+
+    .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 32px; }
+    .value-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: border-color 0.2s; }
+    .value-card:hover { border-color: rgba(124,106,255,0.3); }
+    .value-icon { font-size: 24px; margin-bottom: 12px; display: block; }
+    .value-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .value-card p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 40px 0; }
+    .stat-item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center; }
+    .stat-num { font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700; color: var(--accent2); display: block; margin-bottom: 4px; }
+    .stat-desc { font-size: 12px; color: var(--text-muted); }
+
+    footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 600px) { .stat-strip { grid-template-columns: 1fr; } .nav-links a:not(.active) { display: none; } }
+  
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+    .nav-logo img { height: 27px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .nav-links { display: flex; gap: 22px; align-items: center; margin-left: 28px; }
+    .nav-links a { color: #6b6b80; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
+    .nav-links a:hover { color: #f0f0f8; }
+    .nav-links a.nav-active { color: #f0f0f8; }
+    .nav-links a.nav-chat { color: #a78bfa; font-weight: 600; }
+    .nav-links a.nav-chat:hover { color: #c4b5fd; }
+    .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
+
+  </style>
+</head>
+<body>
+    <nav>
+    <div style="display:flex;align-items:center;flex:1;">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="QuickShare logo">
+        <span>QuickShare</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="">Home</a>
+        <a href="chat.html" class="nav-chat">Chat</a>
+        <a href="about.html" class="nav-active">About</a>
+        <a href="contact.html" class="">Contact</a>
+        <a href="privacy.html" class="">Privacy</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="nav-badge">FREE</span>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="page-label">About</div>
+    <h1 class="page-title">Built for the way<br>you actually work.</h1>
+    <p class="page-sub">QuickShare exists because copy-pasting between devices should not require an account, an app install, or a subscription.</p>
+
+    <div class="stat-strip">
+      <div class="stat-item">
+        <span class="stat-num">0</span>
+        <span class="stat-desc">accounts required</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">7d</span>
+        <span class="stat-desc">automatic expiry</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">1s</span>
+        <span class="stat-desc">save latency</span>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h2>The idea</h2>
+      <p>How many times have you needed to get a snippet of text from your laptop to your phone? You email it to yourself. You drop it in a group chat. You open some notes app that takes thirty seconds to sync. It's frustrating, and it's a solved problem — we just solved it badly.</p>
+      <p>QuickShare takes a different approach: <strong>your IP address is your identity</strong>. Open the editor on any device sharing the same IP, and your text is already there. No account, no handoff, no friction.</p>
+
+      <h2>Our principles</h2>
+    </div>
+
+    <div class="value-grid">
+      <div class="value-card">
+        <span class="value-icon">🚀</span>
+        <h3>Speed first</h3>
+        <p>The fastest path between your thought and synced text. Every interaction is instant.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-icon">🔓</span>
+        <h3>No gatekeeping</h3>
+        <p>Free, forever. No premium tiers, no upsells, no "upgrade to access this feature."</p>
+      </div>
+      <div class="value-card">
+        <span class="value-icon">🧹</span>
+        <h3>Auto-clean</h3>
+        <p>Everything expires after 7 days. We don't hoard your data; we delete it on schedule.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-icon">🎯</span>
+        <h3>One thing well</h3>
+        <p>QuickShare does one job: sync text. No document management, no collaboration bloat.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="prose">
+      <h2>How the sync works</h2>
+      <p>When you open QuickShare, the app fetches your public IP address and uses it as a key to read and write to a real-time cloud database. Any browser session sharing that IP instantly sees the same document.</p>
+      <p>Text is saved automatically <strong>1 second</strong> after you stop typing. A green indicator in the status bar confirms a successful sync. If you're on a mobile network, your IP may differ from your home or office — in that case, simply open the link on the same network for syncing to work.</p>
+      <p>All content is automatically purged <strong>7 days</strong> after the last save — no manual cleanup needed, and no stale data left behind.</p>
+
+      <h2>Contact &amp; feedback</h2>
+      <p>QuickShare is a small, independent project. If you have a bug to report, a feature idea, or just want to say hello — <a href="contact.html" style="color:var(--accent2);text-decoration:none;">reach out via the contact page</a>. Every message is read.</p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 quick/share · synced to your ip ·
+    <a href="about.html">about</a> · <a href="contact.html">contact</a> · <a href="privacy.html">privacy</a>
+  </footer>
+</body>
+</html>

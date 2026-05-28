@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickShare – Sync Text Instantly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
+      --accent: #7c6aff; --accent2: #a78bfa; --accent-glow: rgba(124,106,255,0.25);
+      --text: #f0f0f8; --text-muted: #6b6b80; --text-dim: #3a3a4a;
+      --green: #4ade80; --yellow: #fbbf24; --red: #f87171;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: -200px; left: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    body::after { content: ''; position: fixed; bottom: -200px; right: -200px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    
+    .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-badge { background: var(--accent-glow); border: 1px solid rgba(124,106,255,0.3); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .ad-top { text-align: center; padding: 10px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01); }
+    .ad-box { display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px dashed var(--text-dim); border-radius: 8px; color: var(--text-dim); font-size: 11px; font-family: 'Space Mono', monospace; }
+    .wrapper { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+    .hero { margin-bottom: 20px; }
+    .hero h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+    .hero p { font-size: 13px; color: var(--text-muted); }
+    .editor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1px rgba(124,106,255,0.05), 0 20px 60px rgba(0,0,0,0.4); transition: border-color 0.3s; }
+    .editor-card:focus-within { border-color: rgba(124,106,255,0.3); box-shadow: 0 0 0 1px rgba(124,106,255,0.1), 0 0 40px rgba(124,106,255,0.08), 0 20px 60px rgba(0,0,0,0.4); }
+    .toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; }
+    .btn:hover { background: rgba(255,255,255,0.05); border-color: var(--border-hover); color: var(--text); }
+    .btn-accent { background: linear-gradient(135deg, #7c6aff, #9b8cff); border-color: transparent; color: #fff; box-shadow: 0 4px 15px rgba(124,106,255,0.35); }
+    .btn-accent:hover { background: linear-gradient(135deg, #8b7aff, #a99cff); color: #fff; box-shadow: 0 4px 20px rgba(124,106,255,0.5); transform: translateY(-1px); }
+    #editor { width: 100%; min-height: 380px; background: transparent; border: none; outline: none; padding: 20px; resize: vertical; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; line-height: 1.75; color: var(--text); caret-color: var(--accent2); }
+    #editor::placeholder { color: var(--text-dim); }
+    .in-ad { padding: 12px 16px; border-top: 1px solid var(--border); text-align: center; }
+    .statusbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface2); font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); transition: background 0.3s; flex-shrink: 0; }
+    .dot.synced { background: var(--green); box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+    .dot.saving { background: var(--yellow); box-shadow: 0 0 6px rgba(251,191,36,0.5); }
+    .dot.error { background: var(--red); }
+    .footer-stats { display: flex; gap: 20px; padding: 10px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    .footer-stats span b { color: var(--text-muted); font-weight: 600; }
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .s-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; transition: border-color 0.2s; }
+    .s-card:hover { border-color: var(--border-hover); }
+    .s-card-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; font-family: 'Space Mono', monospace; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row .label { color: var(--text-muted); }
+    .stat-row .value { font-weight: 600; color: var(--text); font-family: 'Space Mono', monospace; font-size: 12px; }
+    .ip-display { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--accent2); margin-bottom: 10px; word-break: break-all; }
+    .expiry-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--green); font-weight: 500; }
+    .feature-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .feature-item:last-child { border-bottom: none; }
+    .feature-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+    footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface2); border: 1px solid var(--border-hover); color: var(--text); padding: 10px 20px; border-radius: 10px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; white-space: nowrap; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    @media (max-width: 780px) { .wrapper { grid-template-columns: 1fr; } .sidebar { display: none; } .hero h1 { font-size: 22px; } }
+  
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+    .nav-logo img { height: 27px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .nav-links { display: flex; gap: 22px; align-items: center; margin-left: 28px; }
+    .nav-links a { color: #6b6b80; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
+    .nav-links a:hover { color: #f0f0f8; }
+    .nav-links a.nav-active { color: #f0f0f8; }
+    .nav-links a.nav-chat { color: #a78bfa; font-weight: 600; }
+    .nav-links a.nav-chat:hover { color: #c4b5fd; }
+    .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
+
+  </style>
+  <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav>
+    <div style="display:flex;align-items:center;flex:1;">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="QuickShare logo">
+        <span>QuickShare</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-active">Home</a>
+        <a href="chat.html" class="nav-chat">Chat</a>
+        <a href="about.html" class="">About</a>
+        <a href="contact.html" class="">Contact</a>
+        <a href="privacy.html" class="">Privacy</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="nav-badge">FREE</span>
+    </div>
+  </nav>
+  <div class="ad-top">
+    <div class="ad-box" style="width:728px;height:90px;max-width:100%;">Ad Space · 728×90 · Paste AdSense code here</div>
+  </div>
+  <div class="wrapper">
+    <div>
+      <div class="hero">
+        <h1>Sync text across your devices</h1>
+        <p>Type anything — it's saved to your IP and syncs for 7 days, automatically.</p>
+      </div>
+      <div class="editor-card">
+        <div class="toolbar">
+          <button class="btn btn-accent" onclick="copyText()"><span>⎘</span> Copy</button>
+          <button class="btn" onclick="clearText()"><span>✕</span> Clear</button>
+          <button class="btn" onclick="downloadText()"><span>↓</span> Download</button>
+          <div style="flex:1"></div>
+          <span style="font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;">auto-saved · ip-synced</span>
+        </div>
+        <textarea id="editor" placeholder="Start typing… your text saves automatically and syncs to any device on your network." oninput="onType()"></textarea>
+        <div class="in-ad">
+          <div class="ad-box" style="width:100%;height:55px;">Ad Space · In-Article · Paste AdSense code here</div>
+        </div>
+        <div class="statusbar">
+          <div class="dot" id="dot"></div>
+          <span id="status-text">Connecting…</span>
+        </div>
+        <div class="footer-stats">
+          <span><b id="fc">0</b> chars</span>
+          <span><b id="fw">0</b> words</span>
+          <span><b id="fl">0</b> lines</span>
+          <span><b id="fs">0</b> sentences</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div style="text-align:center;">
+        <div class="ad-box" style="width:280px;height:250px;border-radius:12px;">Ad · 300×250</div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Your Session</div>
+        <div class="ip-display" id="ip-display">Detecting IP…</div>
+        <div class="expiry-pill"><span>●</span><span id="expiry-label">Saved for 7 days</span></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">Live Stats</div>
+        <div class="stat-row"><span class="label">Characters</span><span class="value" id="sc">0</span></div>
+        <div class="stat-row"><span class="label">Words</span><span class="value" id="sw">0</span></div>
+        <div class="stat-row"><span class="label">Lines</span><span class="value" id="sl">0</span></div>
+        <div class="stat-row"><span class="label">Sentences</span><span class="value" id="ss">0</span></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-title">How it works</div>
+        <div class="feature-item"><div class="feature-dot"></div>Text saves 1s after you stop typing</div>
+        <div class="feature-item"><div class="feature-dot"></div>Linked to your IP address</div>
+        <div class="feature-item"><div class="feature-dot"></div>Open on any device — same text appears</div>
+        <div class="feature-item"><div class="feature-dot"></div>Auto-deleted after 7 days</div>
+        <div class="feature-item"><div class="feature-dot"></div>No login needed</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="ad-box" style="width:280px;height:250px;border-radius:12px;">Ad · 300×250</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:12px;border-top:1px solid var(--border);position:relative;z-index:1;">
+    <div class="ad-box" style="width:728px;height:90px;max-width:100%;border-radius:8px;">Ad · 728×90 · Footer</div>
+  </div>
+  <footer>
+    © 2026 quick/share · synced to your ip ·
+    <a href="about.html">about</a> · <a href="contact.html">contact</a> · <a href="privacy.html">privacy</a>
+  </footer>
+  <div id="toast">Copied!</div>
+  <script>
+    window.onerror = function(msg, src, line, col, err) { return true; };
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyCXTttFelyoKUM5HxqCB-FRy7aydsuYhps",
+        authDomain: "quick-share-91c3b.firebaseapp.com",
+        databaseURL: "https://quick-share-91c3b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "quick-share-91c3b",
+        storageBucket: "quick-share-91c3b.firebasestorage.app",
+        messagingSenderId: "1002255306494",
+        appId: "1:1002255306494:web:6cca2ce180720b48615faf"
+      };
+      firebase.initializeApp(firebaseConfig);
+    } catch(e) { console.log('Firebase init:', e.message); }
+
+    const db = firebase.database();
+    let userIP = 'unknown', saveTimer = null, dbRef = null;
+
+    async function init() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        userIP = data.ip.replace(/\./g, '_');
+        document.getElementById('ip-display').textContent = data.ip;
+      } catch(e) {
+        userIP = 'guest_' + Math.random().toString(36).substr(2,6);
+        document.getElementById('ip-display').textContent = 'Guest session';
+      }
+      try {
+        dbRef = db.ref('savrs/' + userIP);
+        loadText();
+      } catch(e) {
+        setStatus('error', 'Database unavailable');
+      }
+    }
+
+    function loadText() {
+      setStatus('saving', 'Loading your text…');
+      dbRef.once('value').then(snap => {
+        const data = snap.val();
+        if (data && data.text) {
+          const age = Date.now() - (data.timestamp || 0);
+          if (age < 7 * 24 * 60 * 60 * 1000) {
+            document.getElementById('editor').value = data.text;
+            updateStats();
+            const exp = new Date((data.timestamp || Date.now()) + 7*24*60*60*1000);
+            document.getElementById('expiry-label').textContent = 'Expires ' + exp.toLocaleDateString();
+            setStatus('synced', 'Loaded — ready');
+          } else {
+            dbRef.remove();
+            setStatus('synced', 'Ready — start typing');
+          }
+        } else {
+          setStatus('synced', 'Ready — start typing');
+        }
+      }).catch(() => setStatus('error', 'Could not load — check Firebase rules'));
+    }
+
+    function onType() { updateStats(); setStatus('saving', 'Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveText, 1000); }
+
+    function saveText() {
+      if (!dbRef) return;
+      dbRef.set({ text: document.getElementById('editor').value, timestamp: Date.now() })
+        .then(() => setStatus('synced', 'Saved ✓'))
+        .catch(() => setStatus('error', 'Save failed — check Firebase rules'));
+    }
+
+    function setStatus(state, msg) {
+      const d = document.getElementById('dot');
+      d.className = 'dot' + (state ? ' ' + state : '');
+      document.getElementById('status-text').textContent = msg;
+    }
+
+    function updateStats() {
+      const t = document.getElementById('editor').value;
+      const c = t.length, w = t.trim() ? t.trim().split(/\s+/).length : 0;
+      const l = t ? t.split('\n').length : 0, s = t.trim() ? t.split(/[.!?]+/).filter(x=>x.trim()).length : 0;
+      ['fc','sc'].forEach(id => document.getElementById(id).textContent = c);
+      ['fw','sw'].forEach(id => document.getElementById(id).textContent = w);
+      ['fl','sl'].forEach(id => document.getElementById(id).textContent = l);
+      ['fs','ss'].forEach(id => document.getElementById(id).textContent = s);
+    }
+
+    function copyText() { const t = document.getElementById('editor').value; if(!t) return; navigator.clipboard.writeText(t).then(()=>showToast('✓ Copied to clipboard')).catch(()=>showToast('Copy failed')); }
+    function clearText() { document.getElementById('editor').value=''; updateStats(); try{if(dbRef)dbRef.remove();}catch(e){} setStatus('synced','Cleared'); showToast('✕ Cleared'); }
+    function downloadText() { const t=document.getElementById('editor').value; if(!t)return; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'})); a.download='quickshare.txt'; a.click(); }
+    function showToast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200); }
+
+    init();
+  </script>
+</body>
+</html>

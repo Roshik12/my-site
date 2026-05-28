@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QuickShare - Sync text, files, and communicate instantly across devices. No login required.">
+  <title>QuickShare – Sync Text & Files Instantly</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase (Compat SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js" crossorigin="anonymous"></script>
+  
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --accent: #7c6aff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(124,106,255,0.25);
+      --text: #f0f0f8;
+      --text-muted: #6b6b80;
+      --text-dim: #3a3a4a;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ===== BASE STYLES ===== */
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px;
+      right: -200px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== NAVIGATION ===== */
+    
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex: 1;
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .logo:hover {
+      transform: translateY(-2px);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .nav-badge {
+      background: var(--accent-glow);
+      border: 1px solid rgba(124,106,255,0.3);
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    .user-avatar:hover {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    /* ===== MAIN CONTAINER ===== */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ===== TABS (HIDDEN) =====
+    .tabs-container {
+      display: none;
+    }
+
+    .tab-btn {
+      display: none;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ===== EDITOR TAB ===== */
+    .hero {
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .editor-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(124,106,255,0.05), 0 20px 60px rgba(0,0,0,0.4);
+      transition: var(--transition);
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+    }
+
+    .editor-card:focus-within {
+      border-color: rgba(124,106,255,0.3);
+      box-shadow: 0 0 0 1px rgba(124,106,255,0.1), 0 0 40px rgba(124,106,255,0.08), 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #7c6aff, #9b8cff);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(124,106,255,0.35);
+    }
+
+    .btn-accent:hover {
+      background: linear-gradient(135deg, #8b7aff, #a99cff);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(124,106,255,0.5);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-spacer {
+      flex: 1;
+    }
+
+    .btn-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+    }
+
+    #editor {
+      width: 100%;
+      min-height: 380px;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 20px;
+      resize: vertical;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text);
+    }
+
+    #editor::placeholder {
+      color: var(--text-dim);
+    }
+
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+
+    .status-dot.synced {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(74,222,128,0.5);
+    }
+
+    .status-dot.saving {
+      background: var(--yellow);
+      box-shadow: 0 0 6px rgba(251,191,36,0.5);
+    }
+
+    .status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(248,113,113,0.5);
+    }
+
+    .footer-stats {
+      display: flex;
+      gap: 20px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+      background: var(--surface2);
+    }
+
+    .footer-stats span b {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ===== FILE UPLOAD TAB ===== */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(124,106,255,0.02);
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: rgba(124,106,255,0.05);
+    }
+
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(124,106,255,0.1);
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .upload-text h3 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .upload-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .files-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .file-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .file-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(124,106,255,0.1);
+    }
+
+    .file-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .file-name {
+      font-size: 12px;
+      font-weight: 600;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* ===== CHAT TAB ===== */
+    .chat-container {
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      height: 600px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--surface);
+    }
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 70%;
+      word-wrap: break-word;
+      font-size: 13px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message.own {
+      background: var(--accent);
+      margin-left: auto;
+      color: #fff;
+      align-items: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.other {
+      background: var(--surface2);
+      color: var(--text);
+      align-items: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-author {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .message-time {
+      font-size: 10px;
+      opacity: 0.6;
+      margin-top: 4px;
+    }
+
+    .chat-input-area {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: var(--surface2);
+    }
+
+    #chatInput {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+    }
+
+    #chatInput::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* ===== VIDEO CALL TAB ===== */
+    .video-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .video-stream {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      border: 1px solid var(--border);
+    }
+
+    .video-stream video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .call-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .call-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .call-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(124,106,255,0.5);
+    }
+
+    .call-btn.end {
+      background: var(--red);
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: fixed;
+      right: 24px;
+      top: 80px;
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+
+    .s-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: var(--transition);
+    }
+
+    .s-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .s-card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    .ip-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .expiry-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .expiry-pill::before {
+      content: '●';
+      color: var(--green);
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-item:last-child {
+      border-bottom: none;
+    }
+
+    .feature-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    /* ===== TOAST NOTIFICATION ===== */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: transform 0.3s ease-out;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+      margin-top: 64px;
+    }
+
+    footer a {
+      color: var(--accent2);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1200px) {
+      .sidebar {
+        display: none;
+      }
+
+      .container {
+        margin-right: 0;
+      }
+
+      /* Stack layout vertically on tablet */
+      [style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      
+
+      .nav-links {
+        display: none;
+      }
+
+      .nav-right {
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .hero h1 {
+        font-size: 22px;
+      }
+
+      .video-container {
+        grid-template-columns: 1fr;
+      }
+
+      .file-card {
+        grid-column: span 1;
+      }
+
+      [style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px 12px;
+      }
+
+      .toolbar {
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        flex: 1;
+        min-width: 100px;
+        font-size: 11px;
+      }
+
+      .tabs-container {
+        margin-bottom: 16px;
+      }
+
+      .tab-btn {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .nav-right {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      .hero h1 {
+        font-size: 18px;
+      }
+    }
+  
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+    .nav-logo img { height: 27px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .nav-links { display: flex; gap: 22px; align-items: center; margin-left: 28px; }
+    .nav-links a { color: #6b6b80; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
+    .nav-links a:hover { color: #f0f0f8; }
+    .nav-links a.nav-active { color: #f0f0f8; }
+    .nav-links a.nav-chat { color: #a78bfa; font-weight: 600; }
+    .nav-links a.nav-chat:hover { color: #c4b5fd; }
+    .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
+
+  </style>
+</head>
+<body>
+  <!-- NAVIGATION -->
+    <nav>
+    <div style="display:flex;align-items:center;flex:1;">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="QuickShare logo">
+        <span>QuickShare</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-active">Home</a>
+        <a href="chat.html" class="nav-chat">Chat</a>
+        <a href="about.html" class="">About</a>
+        <a href="contact.html" class="">Contact</a>
+        <a href="privacy.html" class="">Privacy</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="nav-badge">FREE</span>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <div class="container">
+    <!-- UNIFIED HOME LAYOUT: Editor + Files + Chat -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+      <!-- LEFT: EDITOR + FILES -->
+      <div>
+        <!-- TEXT EDITOR -->
+        <div class="hero" style="margin-bottom: 16px;">
+          <h1>Sync text across your devices</h1>
+          <p>Type anything — it's saved to your IP and syncs for 7 days, automatically.</p>
+        </div>
+        <div class="editor-card">
+          <div class="toolbar">
+            <button class="btn btn-accent" id="copyBtn" title="Copy to clipboard">
+              <span>⎘</span> Copy
+            </button>
+            <button class="btn" id="clearBtn" title="Clear text">
+              <span>✕</span> Clear
+            </button>
+            <button class="btn" id="downloadBtn" title="Download as .txt">
+              <span>↓</span> Download
+            </button>
+            <div class="btn-spacer"></div>
+            <span class="btn-label">auto-saved · ip-synced</span>
+          </div>
+          <textarea id="editor" placeholder="Start typing… your text saves automatically and syncs to any device on your network."></textarea>
+          <div class="statusbar">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting…</span>
+          </div>
+          <div class="footer-stats">
+            <span><b id="charCount">0</b> chars</span>
+            <span><b id="wordCount">0</b> words</span>
+            <span><b id="lineCount">0</b> lines</span>
+            <span><b id="sentenceCount">0</b> sentences</span>
+          </div>
+        </div>
+
+        <!-- FILES SECTION -->
+        <div style="margin-top: 32px;">
+          <div class="hero" style="margin-bottom: 16px;">
+            <h1>Share Files</h1>
+            <p>Upload files securely. They'll be accessible for 7 days.</p>
+          </div>
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">
+              <h3>Drop files here or click to upload</h3>
+              <p>Max 50MB per file • All formats supported • 7-day expiry</p>
+            </div>
+          </div>
+          <input type="file" id="fileInput" multiple>
+          <div class="files-grid" id="filesGrid"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: CHAT + STATS -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- CHAT SECTION - WhatsApp Style -->
+        <div id="chatSection" style="display: flex; flex-direction: column; height: 500px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--surface);">
+          <!-- Chat Header -->
+          <div style="background: var(--accent); color: #fff; padding: 16px; text-align: center;">
+            <h3 id="chatGroupTitle" style="margin: 0; font-size: 14px; font-weight: 600;">💬 Group Chat</h3>
+            <small id="chatGroupStatus" style="opacity: 0.9; font-size: 11px;">Enter ID & password to join</small>
+          </div>
+
+          <!-- Join Panel (shown until joined) -->
+          <div id="joinPanel" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; justify-content: center; align-items: center; flex: 1; text-align: center; background: rgba(124,106,255,0.02);">
+            <div style="font-size: 48px; margin-bottom: 8px;">🔐</div>
+            <h4 style="margin: 0 0 4px 0; color: var(--text); font-size: 14px;">Group Chat</h4>
+            <p style="margin: 0 0 16px 0; color: var(--text-muted); font-size: 12px;">Create new or join existing</p>
+            
+            <!-- Mode tabs -->
+            <div style="display: flex; gap: 8px; width: 100%; max-width: 240px; margin-bottom: 8px;">
+              <button id="joinModeBtn" class="btn" style="flex: 1; background: var(--accent); color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Join</button>
+              <button id="createModeBtn" class="btn" style="flex: 1; background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">Create</button>
+            </div>
+
+            <!-- Join Mode -->
+            <div id="joinModePanel" style="width: 100%; max-width: 240px; display: flex; flex-direction: column; gap: 8px;">
+              <input type="text" id="groupId" placeholder="Group ID" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; width: 100%; font-size: 12px; font-family: inherit;">
+              <input type="password" id="groupPassword" placeholder="Password (optional)" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; width: 100%; font-size: 12px; font-family: inherit;">
+              <button class="btn btn-accent" id="joinGroupBtn" style="width: 100%; justify-content: center; background: var(--accent); border: none; color: #fff; padding: 10px; cursor: pointer; border-radius: 8px;">Join Group</button>
+            </div>
+
+            <!-- Create Mode -->
+            <div id="createModePanel" style="display: none; width: 100%; max-width: 240px; flex-direction: column; gap: 8px;">
+              <input type="text" id="newGroupId" placeholder="Choose Group ID" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; width: 100%; font-size: 12px; font-family: inherit;">
+              <input type="password" id="newGroupPassword" placeholder="Set Password (optional)" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; width: 100%; font-size: 12px; font-family: inherit;">
+              <button class="btn btn-accent" id="createGroupBtn" style="width: 100%; justify-content: center; background: var(--accent); border: none; color: #fff; padding: 10px; cursor: pointer; border-radius: 8px;">Create Group</button>
+            </div>
+          </div>
+
+          <!-- Chat Area (hidden until joined) -->
+          <div id="chatArea" style="display: none; flex: 1; flex-direction: column;">
+            <div class="chat-messages" id="chatMessages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
+            <div style="padding: 12px; border-top: 1px solid var(--border); background: var(--surface2); display: flex; gap: 8px;">
+              <input type="text" id="chatInput" placeholder="Type a message..." style="flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: inherit; font-size: 13px;">
+              <button class="btn btn-accent" id="sendBtn" style="background: var(--accent); border: none; color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer;">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR: STATS -->
+        <div class="s-card">
+          <div class="s-card-title">Your Session</div>
+          <div class="ip-display" id="ipDisplay">Detecting IP…</div>
+          <div class="expiry-pill"><span id="expiryLabel">Saved for 7 days</span></div>
+        </div>
+        <div class="s-card">
+          <div class="s-card-title">Live Stats</div>
+          <div class="stat-row">
+            <span class="stat-label">Characters</span>
+            <span class="stat-value" id="sidebarChars">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Words</span>
+            <span class="stat-value" id="sidebarWords">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Lines</span>
+            <span class="stat-value" id="sidebarLines">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Sentences</span>
+            <span class="stat-value" id="sidebarSentences">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO CALLS SECTION (Full width) -->
+    <div style="margin-top: 32px;">
+      <div class="hero">
+        <h1>Video & Audio Calls</h1>
+        <p>Crystal-clear peer-to-peer calling. No accounts needed.</p>
+      </div>
+      <div class="video-container">
+        <div class="video-stream">
+          <video id="localVideo" autoplay muted></video>
+        </div>
+        <div class="video-stream">
+          <video id="remoteVideo" autoplay></video>
+        </div>
+      </div>
+      <div class="call-controls">
+        <button class="call-btn" id="callBtn" title="Start call">☎️</button>
+        <button class="call-btn" id="toggleAudioBtn" title="Toggle audio">🎤</button>
+        <button class="call-btn" id="toggleVideoBtn" title="Toggle video">📹</button>
+        <button class="call-btn end" id="endCallBtn" title="End call">❌</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    © 2026 quick/share · synced to your ip ·
+    <a href="about.html">about</a> · <a href="contact.html">contact</a> · <a href="privacy.html">privacy</a>
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast"></div>
+
+  <!-- FIREBASE CONFIG & INITIALIZATION (MUST BE BEFORE MODULE SCRIPTS) -->
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXTttFelyoKUM5HxqCB-FRy7aydsuYhps",
+      authDomain: "quick-share-91c3b.firebaseapp.com",
+      databaseURL: "https://quick-share-91c3b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "quick-share-91c3b",
+      storageBucket: "quick-share-91c3b.firebasestorage.app",
+      messagingSenderId: "1002255306494",
+      appId: "1:1002255306494:web:6cca2ce180720b48615faf",
+      measurementId: "G-W32PC4P2TG"
+    };
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+    } catch (err) {
+      console.error('Firebase init error:', err.message);
+    }
+
+    window.db = firebase.database();
+    const storage = firebase.storage();
+    console.log('[index.html] Firebase initialized, window.db set:', !!window.db);
+  </script>
+
+  <!-- Additional feature scripts (loaded AFTER Firebase init) -->
+  <script src="js/auth.js"></script>
+  <script src="js/fileStorage.js"></script>
+  <script src="js/groups.js"></script>
+  <script src="js/videocall.js"></script>
+
+  <!-- MAIN APP INITIALIZATION -->
+  <script>
+
+    // Global State
+    let userIP = 'unknown';
+    let saveTimer = null;
+    let dbRef = null;
+    let currentUser = null;
+
+    // ===== INIT APPLICATION =====
+    async function initApp() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        userIP = data.ip.replace(/\./g, '_');
+        document.getElementById('ipDisplay').textContent = data.ip;
+      } catch (err) {
+        userIP = 'guest_' + Math.random().toString(36).substr(2, 6);
+        document.getElementById('ipDisplay').textContent = 'Guest session';
+      }
+
+      try {
+        dbRef = window.db.ref('saves/' + userIP);
+        loadText();
+      } catch (err) {
+        setStatus('error', 'Database unavailable');
+      }
+    }
+
+    // ===== TEXT EDITOR FUNCTIONS =====
+    function loadText() {
+      setStatus('saving', 'Loading your text…');
+      dbRef.once('value')
+        .then(snap => {
+          const data = snap.val();
+          if (data && data.text) {
+            const age = Date.now() - (data.timestamp || 0);
+            if (age < 7 * 24 * 60 * 60 * 1000) {
+              document.getElementById('editor').value = data.text;
+              updateStats();
+              const exp = new Date((data.timestamp || Date.now()) + 7 * 24 * 60 * 60 * 1000);
+              document.getElementById('expiryLabel').textContent = 'Expires ' + exp.toLocaleDateString();
+              setStatus('synced', 'Loaded — ready');
+            } else {
+              dbRef.remove();
+              setStatus('synced', 'Ready — start typing');
+            }
+          } else {
+            setStatus('synced', 'Ready — start typing');
+          }
+        })
+        .catch(() => setStatus('error', 'Could not load text'));
+    }
+
+    function saveText() {
+      if (!dbRef) return;
+      const text = document.getElementById('editor').value;
+      dbRef.set({ text, timestamp: Date.now() })
+        .then(() => setStatus('synced', 'Saved ✓'))
+        .catch(() => setStatus('error', 'Save failed'));
+    }
+
+    document.getElementById('editor').addEventListener('input', () => {
+      updateStats();
+      setStatus('saving', 'Saving…');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveText, 1000);
+    });
+
+    function updateStats() {
+      const text = document.getElementById('editor').value;
+      const chars = text.length;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const lines = text ? text.split('\n').length : 0;
+      const sentences = text.trim() ? text.split(/[.!?]+/).filter(x => x.trim()).length : 0;
+
+      document.getElementById('charCount').textContent = chars;
+      document.getElementById('wordCount').textContent = words;
+      document.getElementById('lineCount').textContent = lines;
+      document.getElementById('sentenceCount').textContent = sentences;
+
+      document.getElementById('sidebarChars').textContent = chars;
+      document.getElementById('sidebarWords').textContent = words;
+      document.getElementById('sidebarLines').textContent = lines;
+      document.getElementById('sidebarSentences').textContent = sentences;
+    }
+
+    function setStatus(state, msg) {
+      const dot = document.getElementById('statusDot');
+      dot.className = 'status-dot ' + (state || '');
+      document.getElementById('statusText').textContent = msg;
+    }
+
+    // ===== EDITOR BUTTONS =====
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const text = document.getElementById('editor').value;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('✓ Copied to clipboard');
+      } catch {
+        showToast('❌ Copy failed');
+      }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear all text?')) {
+        document.getElementById('editor').value = '';
+        updateStats();
+        if (dbRef) dbRef.remove();
+        showToast('✕ Cleared');
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const text = document.getElementById('editor').value;
+      if (!text) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+      a.download = 'quickshare-' + Date.now() + '.txt';
+      a.click();
+      showToast('✓ Downloaded');
+    });
+
+    // ===== FILE UPLOAD =====
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (file.size > 50 * 1024 * 1024) {
+          showToast('❌ File too large (max 50MB)');
+          return;
+        }
+        uploadFile(file);
+      });
+    }
+
+    function uploadFile(file) {
+      if (window.fileStorage) {
+        window.fileStorage.uploadFile(file, (pct) => {
+          console.log('Upload progress:', pct.toFixed(0) + '%');
+        }).then(() => {
+          showToast('✓ File uploaded');
+          if (window.fileStorage.renderFilesGrid) {
+            window.fileStorage.renderFilesGrid();
+          }
+        }).catch(err => {
+          console.error('Upload error:', err);
+          showToast('❌ Upload failed');
+        });
+      } else {
+        const path = `files/${userIP}/${Date.now()}_${file.name}`;
+        const ref = storage.ref(path);
+        ref.put(file).then(() => {
+          showToast('✓ File uploaded');
+        }).catch(() => showToast('❌ Upload failed'));
+      }
+    }
+
+    // ===== CHAT TAB HANDLERS =====
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    const groupIdInput = document.getElementById('groupId');
+    const groupPasswordInput = document.getElementById('groupPassword');
+    const joinGroupBtn = document.getElementById('joinGroupBtn');
+    const newGroupIdInput = document.getElementById('newGroupId');
+    const newGroupPasswordInput = document.getElementById('newGroupPassword');
+    const createGroupBtn = document.getElementById('createGroupBtn');
+    const joinModeBtn = document.getElementById('joinModeBtn');
+    const createModeBtn = document.getElementById('createModeBtn');
+    const joinModePanel = document.getElementById('joinModePanel');
+    const createModePanel = document.getElementById('createModePanel');
+    const joinPanel = document.getElementById('joinPanel');
+    const chatArea = document.getElementById('chatArea');
+    const chatGroupTitle = document.getElementById('chatGroupTitle');
+    const chatGroupStatus = document.getElementById('chatGroupStatus');
+
+    let isJoinedGroup = false;
+
+    // Mode switching
+    joinModeBtn.addEventListener('click', () => {
+      joinModeBtn.style.background = 'var(--accent)';
+      joinModeBtn.style.color = '#fff';
+      joinModeBtn.style.border = 'none';
+      createModeBtn.style.background = 'transparent';
+      createModeBtn.style.color = 'var(--text-muted)';
+      createModeBtn.style.border = '1px solid var(--border)';
+      joinModePanel.style.display = 'flex';
+      createModePanel.style.display = 'none';
+    });
+
+    createModeBtn.addEventListener('click', () => {
+      createModeBtn.style.background = 'var(--accent)';
+      createModeBtn.style.color = '#fff';
+      createModeBtn.style.border = 'none';
+      joinModeBtn.style.background = 'transparent';
+      joinModeBtn.style.color = 'var(--text-muted)';
+      joinModeBtn.style.border = '1px solid var(--border)';
+      createModePanel.style.display = 'flex';
+      joinModePanel.style.display = 'none';
+    });
+
+    // Join group
+    joinGroupBtn.addEventListener('click', async () => {
+      const groupId = groupIdInput.value.trim();
+      const password = groupPasswordInput.value;
+      if (!groupId) {
+        showToast('❌ Enter group ID');
+        return;
+      }
+      try {
+        await window.groups.joinGroup(groupId, password);
+        isJoinedGroup = true;
+        joinPanel.style.display = 'none';
+        chatArea.style.display = 'flex';
+        chatGroupTitle.textContent = `💬 ${groupId}`;
+        chatGroupStatus.textContent = 'Connected • Online';
+        chatMessages.innerHTML = '';
+        showToast('✓ Joined group');
+        
+        // Start listening to messages
+        window.groups.listenToMessages((msg) => {
+          addChatMessage(msg);
+        });
+        
+        chatInput.focus();
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    });
+
+    // Create group
+    createGroupBtn.addEventListener('click', async () => {
+      const groupId = newGroupIdInput.value.trim();
+      const password = newGroupPasswordInput.value;
+      if (!groupId) {
+        showToast('❌ Enter group ID');
+        return;
+      }
+      try {
+        await window.groups.createGroup(groupId, password);
+        isJoinedGroup = true;
+        joinPanel.style.display = 'none';
+        chatArea.style.display = 'flex';
+        chatGroupTitle.textContent = `💬 ${groupId}`;
+        chatGroupStatus.textContent = 'Connected • Online (Owner)';
+        chatMessages.innerHTML = '';
+        showToast('✓ Group created & joined');
+        
+        // Start listening to messages
+        window.groups.listenToMessages((msg) => {
+          addChatMessage(msg);
+        });
+        
+        chatInput.focus();
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    });
+
+    // Send message
+    sendBtn.addEventListener('click', () => {
+      if (isJoinedGroup) {
+        const text = chatInput.value.trim();
+        if (text) {
+          window.groups.sendMessage(text);
+          chatInput.value = '';
+          chatInput.focus();
+        }
+      }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && isJoinedGroup) {
+        sendBtn.click();
+      }
+    });
+
+    groupIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !isJoinedGroup) {
+        joinGroupBtn.click();
+      }
+    });
+
+    newGroupIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !isJoinedGroup) {
+        createGroupBtn.click();
+      }
+    });
+
+    groupPasswordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !isJoinedGroup) {
+        joinGroupBtn.click();
+      }
+    });
+
+    function addChatMessage(msg) {
+      const div = document.createElement('div');
+      const currentUser = window.auth?.getCurrentUser?.()?.email || 'You';
+      const isOwn = msg.author === currentUser;
+      div.className = 'message ' + (isOwn ? 'own' : 'other');
+      const time = new Date(msg.serverTimestamp || msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      let content = `<span class="message-time">${time}</span>`;
+      if (!isOwn) {
+        content = `<span class="message-author">${msg.authorName || msg.author || 'Anonymous'}</span>` + content;
+      }
+      content += `<span>${msg.text}</span>`;
+      
+      div.innerHTML = content;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // ===== VIDEO CALL HANDLERS =====
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const callBtn = document.getElementById('callBtn');
+    const toggleAudioBtn = document.getElementById('toggleAudioBtn');
+    const toggleVideoBtn = document.getElementById('toggleVideoBtn');
+    const endCallBtn = document.getElementById('endCallBtn');
+
+    let audioEnabled = true;
+    let videoEnabled = true;
+    let localStreamStarted = false;
+
+    // Start local video on call button click
+    callBtn.addEventListener('click', async () => {
+      if (!localStreamStarted) {
+        try {
+          await window.videocall.startLocalStream(localVideo);
+          localStreamStarted = true;
+        } catch (err) {
+          showToast('❌ Camera access denied');
+          return;
+        }
+      }
+      const callId = 'call_' + Date.now();
+      try {
+        await window.videocall.initiateCall(callId, remoteVideo, (stream) => {
+          remoteVideo.srcObject = stream;
+        });
+        showToast('✓ Call initiated');
+        callBtn.disabled = true;
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    });
+
+    toggleAudioBtn.addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      window.videocall.toggleAudio(audioEnabled);
+      toggleAudioBtn.style.background = audioEnabled ? 'var(--accent)' : 'var(--red)';
+      showToast(audioEnabled ? '🎤 Audio on' : '🔇 Audio off');
+    });
+
+    toggleVideoBtn.addEventListener('click', () => {
+      videoEnabled = !videoEnabled;
+      window.videocall.toggleVideo(videoEnabled);
+      toggleVideoBtn.style.background = videoEnabled ? 'var(--accent)' : 'var(--red)';
+      showToast(videoEnabled ? '📹 Video on' : '📴 Video off');
+    });
+
+    endCallBtn.addEventListener('click', () => {
+      window.videocall.endCall();
+      window.videocall.stopLocalStream();
+      localVideo.srcObject = null;
+      remoteVideo.srcObject = null;
+      localStreamStarted = false;
+      callBtn.disabled = false;
+      showToast('✕ Call ended');
+    });
+
+    // ===== NOTIFICATIONS =====
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    // ===== INIT =====
+    initApp();
+    console.log('✓ Firebase initialized');
+    console.log('✓ Groups ready - try: groups.createGroup("testgroup", "")');
+    
+    // Initialize Google OAuth (only if valid client ID is set)
+    if (window.auth) {
+      setTimeout(() => {
+        const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+        // Only initialize if a real client ID is provided
+        if (clientId && !clientId.includes('YOUR_')) {
+          window.auth.initGoogleSignIn(clientId);
+          console.log('✓ Google OAuth initialized');
+        } else {
+          // Hide button if no valid client ID
+          const btn = document.getElementById('googleSignInButton');
+          if (btn) btn.style.display = 'none';
+          console.log('⚠ Google OAuth not configured - chat works without login');
+        }
+      }, 100);
+    }
+    
+    // Load files gallery on page load
+    if (window.fileStorage) {
+      setTimeout(() => window.fileStorage.renderFilesGrid(), 500);
+    }
+  </script>
+</body>
+</html>

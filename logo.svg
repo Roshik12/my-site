@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Quick Share logo">
+  <!-- Outer circle border -->
+  <circle cx="80" cy="80" r="75" fill="none" stroke="#000000" stroke-width="2"/>
+  
+  <!-- Inner circle -->
+  <circle cx="80" cy="80" r="70" fill="none" stroke="#000000" stroke-width="1"/>
+  
+  <!-- Top arc text path -->
+  <defs>
+    <path id="topArc" d="M 30,80 A 50,50 0 0,1 130,80" fill="none"/>
+    <path id="bottomArc" d="M 130,80 A 50,50 0 0,1 30,80" fill="none"/>
+  </defs>
+  
+  <!-- Curved text at top -->
+  <text font-family="Georgia, serif" font-size="11" fill="#000000" letter-spacing="2" opacity="0.7">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">
+      SYNC • SHARE • SYNC FOR 7 DAYS
+    </textPath>
+  </text>
+  
+  <!-- Horizontal divider lines -->
+  <line x1="50" y1="75" x2="110" y2="75" stroke="#000000" stroke-width="1" opacity="0.3"/>
+  <line x1="50" y1="85" x2="110" y2="85" stroke="#000000" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Main text -->
+  <text x="80" y="92" font-family="Georgia, serif" font-size="48" font-weight="normal" fill="#000000" text-anchor="middle">Quick Share</text>
+</svg>

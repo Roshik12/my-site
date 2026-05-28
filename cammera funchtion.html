@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Drawing App (Fixed Bundle)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm/index.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.2);
+            background: #1a1a1a;
+        }
+
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 640px;
+            height: 480px;
+            border-radius: 12px;
+            transform: rotateY(180deg);
+        }
+
+        video {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        /* Top canvas holds the live drawing, bottom handles background/video */
+        #paintCanvas {
+            z-index: 2;
+        }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ccc;
+        }
+
+        input[type="color"] {
+            border: none;
+            background: none;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            accent-color: #00ffca;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            height: 24px;
+            color: #00ffca;
+            text-shadow: 0 0 8px rgba(0, 255, 202, 0.5);
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #00ffca;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="margin: 0 0 15px 0; font-weight: 300; letter-spacing: 2px;">AIR DRAWING</h1>
+
+    <div id="container">
+        <div id="loading">Downloading Hand AI Engine (Please wait)...</div>
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="paintCanvas" width="640" height="480"></canvas>
+    </div>
+
+    <div id="status">Status: Initializing AI...</div>
+
+    <div id="controls">
+        <div class="control-group">
+            <label for="brushColor">Color</label>
+            <input type="color" id="brushColor" value="#00ffca">
+        </div>
+        <div class="control-group">
+            <label for="brushSize">Size</label>
+            <input type="range" id="brushSize" min="2" max="25" value="8">
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('paintCanvas');
+        const ctx = canvasElement.getContext('2d');
+        const statusElement = document.getElementById('status');
+        const loadingElement = document.getElementById('loading');
+        
+        const colorPicker = document.getElementById('brushColor');
+        const sizeSlider = document.getElementById('brushSize');
+
+        let handLandmarker = undefined;
+        let lastX = null;
+        let lastY = null;
+
+        // Setup drawing configurations
+        function setNeonStyle() {
+            ctx.strokeStyle = colorPicker.value;
+            ctx.lineWidth = sizeSlider.value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = colorPicker.value;
+            ctx.shadowBlur = sizeSlider.value * 1.5;
+        }
+
+        function getDistance(p1, p2) {
+            return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        }
+
+        // Initialize MediaPipe Hand Landmarker via Google Tasks Vision
+        async function initializeHandTracking() {
+            try {
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+                );
+                
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numHands: 1
+                });
+
+                loadingElement.innerText = "Camera starting...";
+                startCamera();
+            } catch (error) {
+                loadingElement.innerText = "Initialization failed. Check internet/console.";
+                statusElement.textContent = "Error loading AI models.";
+                console.error(error);
+            }
+        }
+
+        // Start Webcam stream
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+                .then((stream) => {
+                    videoElement.srcObject = stream;
+                    videoElement.addEventListener("loadeddata", () => {
+                        loadingElement.style.display = "none";
+                        statusElement.textContent = "Status: Active. Show hand!";
+                        requestAnimationFrame(predictLoop);
+                    });
+                })
+                .catch((err) => {
+                    loadingElement.innerText = "Camera access denied.";
+                    console.error(err);
+                });
+        }
+
+        let lastVideoTime = -1;
+        
+        function predictLoop() {
+            if (!handLandmarker || videoElement.currentTime === lastVideoTime) {
+                requestAnimationFrame(predictLoop);
+                return;
+            }
+            
+            lastVideoTime = videoElement.currentTime;
+            
+            // Run prediction
+            const startTimeMs = performance.now();
+            const results = handLandmarker.detectForVideo(videoElement, startTimeMs);
+
+            // Temporarily store original drawing composition
+            const currentDrawing = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.landmarks && results.landmarks.length > 0) {
+                const landmarks = results.landmarks[0];
+
+                const wrist = landmarks[0];
+                const indexTip = landmarks[8];
+                const indexPip = landmarks[6];
+                const middleTip = landmarks[12];
+                const ringTip = landmarks[16];
+                const pinkyTip = landmarks[20];
+
+                const currentX = indexTip.x * canvasElement.width;
+                const currentY = indexTip.y * canvasElement.height;
+
+                // Gestures calculations
+                const baseDist = getDistance(wrist, indexPip);
+                
+                const isOpenPalm = 
+                    getDistance(wrist, indexTip) > baseDist * 1.8 &&
+                    getDistance(wrist, middleTip) > baseDist * 1.8 &&
+                    getDistance(wrist, ringTip) > baseDist * 1.8 &&
+                    getDistance(wrist, pinkyTip) > baseDist * 1.8;
+
+                const isClosedFist = 
+                    getDistance(wrist, indexTip) < baseDist * 1.3 &&
+                    getDistance(wrist, middleTip) < baseDist * 1.3 &&
+                    getDistance(wrist, ringTip) < baseDist * 1.3 &&
+                    getDistance(wrist, pinkyTip) < baseDist * 1.3;
+
+                const isOneFinger = 
+                    indexTip.y < indexPip.y && 
+                    middleTip.y > indexPip.y && 
+                    ringTip.y > indexPip.y && 
+                    pinkyTip.y > indexPip.y &&
+                    !isOpenPalm;
+
+                // Clear shadow settings before running gesture paths
+                ctx.shadowBlur = 0;
+
+                if (isOpenPalm) {
+                    statusElement.textContent = "Status: Erasing (Open Palm)";
+                    statusElement.style.color = "#ff4a4a";
+                    
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.beginPath();
+                    ctx.arc(currentX, currentY, sizeSlider.value * 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    lastX = null; lastY = null;
+                } 
+                else if (isClosedFist) {
+                    statusElement.textContent = "Status: Paused (Closed Fist)";
+                    statusElement.style.color = "#ffb703";
+                    lastX = null; lastY = null;
+                } 
+                else if (isOneFinger) {
+                    statusElement.textContent = "Status: Drawing (Index Finger)";
+                    statusElement.style.color = "#00ffca";
+                    
+                    ctx.globalCompositeOperation = 'source-over';
+                    setNeonStyle();
+
+                    if (lastX !== null && lastY !== null) {
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(currentX, currentY);
+                        ctx.stroke();
+                    }
+                    lastX = currentX;
+                    lastY = currentY;
+                } 
+                else {
+                    statusElement.textContent = "Status: Hand Idle";
+                    statusElement.style.color = "#ffffff";
+                    lastX = null; lastY = null;
+                }
+
+                // Add a visual tracking indicator over your index finger 
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+            } else {
+                statusElement.textContent = "Status: Waiting for hand...";
+                statusElement.style.color = "#888888";
+                lastX = null; lastY = null;
+            }
+
+            requestAnimationFrame(predictLoop);
+        }
+
+        // Fire on Window Load
+        window.onload = initializeHandTracking;
+    </script>
+</body>
+</html>
