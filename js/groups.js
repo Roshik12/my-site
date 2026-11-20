@@ -86,6 +86,7 @@
     const user = window.auth?.getCurrentUser?.() || null;
     const msg = {
       author: user?.email || 'Anonymous',
+      clientId: window.QS_CLIENT_ID || null,
       authorName: user?.name || 'Anonymous User',
       text: text.trim(),
       timestamp: firebase.database.ServerValue.TIMESTAMP,
