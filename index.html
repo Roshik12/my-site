@@ -848,6 +848,64 @@
     .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
     @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
 
+
+    /* ===== UI POLISH (v2) ===== */
+    ::selection { background: rgba(124,106,255,0.35); }
+    [hidden] { display: none !important; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(124,106,255,0.35) transparent; }
+    .container { max-width: 1240px; margin-inline: auto; padding-inline: 24px; position: relative; z-index: 1; }
+    .hero h1 { letter-spacing: -0.025em; background: linear-gradient(135deg, #f0f0f8 30%, #a78bfa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .editor-card, #chatSection, .file-card, .call-panel { background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)), var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.6); }
+    .editor-card:focus-within, #chatSection:focus-within { border-color: rgba(124,106,255,0.5); box-shadow: 0 0 0 4px rgba(124,106,255,0.1), 0 10px 30px -12px rgba(0,0,0,0.6); }
+    .btn { border-radius: 10px; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0) scale(0.98); }
+    .btn-accent { background: linear-gradient(135deg, #7c6aff, #9b6bff); box-shadow: 0 6px 18px -6px rgba(124,106,255,0.7); }
+    input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+    .upload-zone { border-radius: 18px; background: radial-gradient(120% 140% at 50% 0%, rgba(124,106,255,0.09), transparent 60%); }
+    .upload-zone:hover .upload-icon, .upload-zone.dragover .upload-icon { transform: translateY(-4px) scale(1.08); }
+    .upload-icon { transition: var(--transition); }
+    .files-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+    .file-card { padding: 12px; overflow: hidden; }
+    .file-card:hover { transform: translateY(-3px); border-color: rgba(124,106,255,0.5); }
+    .file-thumb { height: 110px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; }
+    .file-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .file-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+    .file-size { color: var(--text-muted); font-size: 11px; margin: 2px 0 10px; }
+    .file-actions { display: flex; gap: 6px; justify-content: center; }
+    .file-actions .btn { padding: 6px 10px; font-size: 12px; }
+    .file-progress { height: 6px; border-radius: 6px; background: var(--surface2); overflow: hidden; margin: 10px 0 4px; }
+    .file-progress span { display: block; height: 100%; background: linear-gradient(90deg, #7c6aff, #a78bfa); transition: width 0.2s; }
+    .files-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 13px; padding: 18px; }
+    .message { border-radius: 14px; max-width: 82%; }
+    .message.own { background: linear-gradient(135deg, #7c6aff, #8f6bff); border-bottom-right-radius: 4px; }
+    .message.other { border-bottom-left-radius: 4px; }
+    .call-panel { padding: 20px; }
+    .call-status { text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+    .incoming-call { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 14px; border-radius: 12px; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.35); animation: ring 1.2s ease-in-out infinite; }
+    @keyframes ring { 50% { box-shadow: 0 0 0 6px rgba(74,222,128,0.12); } }
+    .video-stream { position: relative; background: #07070b; border-radius: 14px; }
+    .stream-label { position: absolute; left: 10px; bottom: 8px; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); }
+    .video-stream video { background: #07070b; }
+    .call-panel:not(.in-call) .video-container { display: none; }
+    .audio-only .video-stream video { opacity: 0; }
+    .audio-only .video-stream::before { content: '🎧'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; }
+    .call-pill { border: none; border-radius: 999px; padding: 0 20px; height: 48px; font: inherit; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7c6aff, #9b6bff); transition: var(--transition); }
+    .call-pill:first-child { background: linear-gradient(135deg, #22c55e, #4ade80); color: #052e16; }
+    .call-pill:hover:not(:disabled), .call-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .call-pill:disabled, .call-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .call-btn { background: var(--surface2); border: 1px solid var(--border); }
+    .call-btn.off { background: var(--red); }
+    .call-btn.end { background: var(--red); border: none; }
+    #toast { border-radius: 12px; backdrop-filter: blur(12px); }
+    @media (max-width: 860px) {
+      .container { padding-inline: 14px; }
+      .container > div[style*="grid-template-columns: 2fr 1fr"] { grid-template-columns: 1fr !important; }
+      .video-container { grid-template-columns: 1fr; }
+      .call-controls { gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
   </style>
 </head>
 <body>
@@ -1008,19 +1066,24 @@
         <h1>Video & Audio Calls</h1>
         <p>Crystal-clear peer-to-peer calling. No accounts needed.</p>
       </div>
-      <div class="video-container">
-        <div class="video-stream">
-          <video id="localVideo" autoplay muted></video>
+      <div class="call-panel" id="callPanel">
+        <div class="call-status" id="callStatus">Join or create a group in the chat above to start a call.</div>
+        <div class="incoming-call" id="incomingCall" hidden>
+          <span>📞 Incoming <b id="incomingType">video</b> call</span>
+          <div><button class="btn btn-accent" id="acceptCallBtn">Accept</button>
+          <button class="btn" id="declineCallBtn">Decline</button></div>
         </div>
-        <div class="video-stream">
-          <video id="remoteVideo" autoplay></video>
+        <div class="video-container">
+          <div class="video-stream"><video id="localVideo" autoplay muted playsinline></video><span class="stream-label">You</span></div>
+          <div class="video-stream"><video id="remoteVideo" autoplay playsinline></video><span class="stream-label">Friend</span></div>
         </div>
-      </div>
-      <div class="call-controls">
-        <button class="call-btn" id="callBtn" title="Start call">☎️</button>
-        <button class="call-btn" id="toggleAudioBtn" title="Toggle audio">🎤</button>
-        <button class="call-btn" id="toggleVideoBtn" title="Toggle video">📹</button>
-        <button class="call-btn end" id="endCallBtn" title="End call">❌</button>
+        <div class="call-controls">
+          <button class="call-pill" id="voiceCallBtn" disabled>📞 Voice call</button>
+          <button class="call-pill" id="videoCallBtn" disabled>🎥 Video call</button>
+          <button class="call-btn" id="toggleAudioBtn" title="Mute / unmute" disabled>🎤</button>
+          <button class="call-btn" id="toggleVideoBtn" title="Camera on / off" disabled>📹</button>
+          <button class="call-btn end" id="endCallBtn" title="End call" disabled>✕</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1055,7 +1118,8 @@
     }
 
     window.db = firebase.database();
-    const storage = firebase.storage();
+    window.storage = firebase.storage();
+    const storage = window.storage;
     console.log('[index.html] Firebase initialized, window.db set:', !!window.db);
   </script>
 
@@ -1085,6 +1149,8 @@
         userIP = 'guest_' + Math.random().toString(36).substr(2, 6);
         document.getElementById('ipDisplay').textContent = 'Guest session';
       }
+      window.userIP = userIP;
+      if (window.fileStorage) window.fileStorage.init(userIP);
 
       try {
         dbRef = window.db.ref('saves/' + userIP);
@@ -1227,7 +1293,7 @@
           }
         }).catch(err => {
           console.error('Upload error:', err);
-          showToast('❌ Upload failed');
+          showToast('❌ ' + (err.message || 'Upload failed'));
         });
       } else {
         const path = `files/${userIP}/${Date.now()}_${file.name}`;
@@ -1238,7 +1304,15 @@
       }
     }
 
+    // Paste images/files from clipboard
+    document.addEventListener('paste', e => {
+      const files = Array.from((e.clipboardData && e.clipboardData.files) || []);
+      if (files.length) { e.preventDefault(); handleFiles(files); }
+    });
+
     // ===== CHAT TAB HANDLERS =====
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    window.QS_CLIENT_ID = localStorage.getItem('qs_client_id') || (() => { const v = 'c_' + Math.random().toString(36).slice(2, 10); localStorage.setItem('qs_client_id', v); return v; })();
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatMessages = document.getElementById('chatMessages');
@@ -1306,6 +1380,7 @@
         });
         
         chatInput.focus();
+        onGroupJoined(groupId);
       } catch (err) {
         showToast('❌ ' + err.message);
       }
@@ -1335,6 +1410,7 @@
         });
         
         chatInput.focus();
+        onGroupJoined(groupId);
       } catch (err) {
         showToast('❌ ' + err.message);
       }
@@ -1379,79 +1455,98 @@
     function addChatMessage(msg) {
       const div = document.createElement('div');
       const currentUser = window.auth?.getCurrentUser?.()?.email || 'You';
-      const isOwn = msg.author === currentUser;
+      const isOwn = msg.clientId ? msg.clientId === window.QS_CLIENT_ID : msg.author === currentUser;
       div.className = 'message ' + (isOwn ? 'own' : 'other');
       const time = new Date(msg.serverTimestamp || msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
       let content = `<span class="message-time">${time}</span>`;
       if (!isOwn) {
-        content = `<span class="message-author">${msg.authorName || msg.author || 'Anonymous'}</span>` + content;
+        content = `<span class="message-author">${esc(msg.authorName || msg.author || 'Anonymous')}</span>` + content;
       }
-      content += `<span>${msg.text}</span>`;
+      content += `<span>${esc(msg.text)}</span>`;
       
       div.innerHTML = content;
       chatMessages.appendChild(div);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ===== VIDEO CALL HANDLERS =====
-    const localVideo = document.getElementById('localVideo');
-    const remoteVideo = document.getElementById('remoteVideo');
-    const callBtn = document.getElementById('callBtn');
-    const toggleAudioBtn = document.getElementById('toggleAudioBtn');
-    const toggleVideoBtn = document.getElementById('toggleVideoBtn');
-    const endCallBtn = document.getElementById('endCallBtn');
+    // ===== CALLS (voice + video, scoped to the joined group) =====
+    const $ = id => document.getElementById(id);
+    const localVideo = $('localVideo'), remoteVideo = $('remoteVideo'), callPanel = $('callPanel');
+    const callStatus = $('callStatus'), incomingBox = $('incomingCall');
+    const voiceBtn = $('voiceCallBtn'), videoBtn = $('videoCallBtn');
+    const toggleAudioBtn = $('toggleAudioBtn'), toggleVideoBtn = $('toggleVideoBtn'), endCallBtn = $('endCallBtn');
+    let currentGroup = null, audioOn = true, videoOn = true, callIsAudioOnly = false;
 
-    let audioEnabled = true;
-    let videoEnabled = true;
-    let localStreamStarted = false;
+    function setCallUI(inCall, audioOnly) {
+      callPanel.classList.toggle('in-call', inCall);
+      callPanel.classList.toggle('audio-only', inCall && audioOnly);
+      voiceBtn.disabled = videoBtn.disabled = inCall || !currentGroup;
+      endCallBtn.disabled = toggleAudioBtn.disabled = !inCall;
+      toggleVideoBtn.disabled = !inCall || audioOnly;
+      audioOn = videoOn = true;
+      toggleAudioBtn.classList.remove('off'); toggleVideoBtn.classList.remove('off');
+      if (!inCall) { localVideo.srcObject = null; remoteVideo.srcObject = null; }
+    }
 
-    // Start local video on call button click
-    callBtn.addEventListener('click', async () => {
-      if (!localStreamStarted) {
-        try {
-          await window.videocall.startLocalStream(localVideo);
-          localStreamStarted = true;
-        } catch (err) {
-          showToast('❌ Camera access denied');
-          return;
-        }
+    const callHandlers = () => ({
+      onLocal: st => { localVideo.srcObject = st; },
+      onRemote: st => { remoteVideo.srcObject = st; remoteVideo.play().catch(() => {}); },
+      onState: st => {
+        callStatus.textContent = st === 'connected' ? '🟢 Connected' : st === 'connecting' ? '🟡 Connecting…' : st === 'disconnected' ? '🟠 Connection unstable…' : callStatus.textContent;
+      },
+      onError: e => showToast('❌ ' + e.message),
+      onEnded: remote => {
+        setCallUI(false, false);
+        callStatus.textContent = currentGroup ? `Group "${currentGroup}" — start a call, others in the group can join` : 'Join or create a group in the chat above to start a call.';
+        if (remote) showToast('📴 Call ended');
       }
-      const callId = 'call_' + Date.now();
+    });
+
+    function onGroupJoined(gid) {
+      currentGroup = gid;
+      if (!window.videocall.inCall()) { setCallUI(false, false); callStatus.textContent = `Group "${gid}" — start a call, others in the group can join`; }
+      window.videocall.watch(gid, info => {
+        if (info) { $('incomingType').textContent = info.callType === 'video' ? 'video' : 'voice'; incomingBox.hidden = false; }
+        else incomingBox.hidden = true;
+      });
+    }
+
+    async function beginCall(video) {
+      if (!currentGroup) { showToast('❌ Join a group first'); return; }
       try {
-        await window.videocall.initiateCall(callId, remoteVideo, (stream) => {
-          remoteVideo.srcObject = stream;
-        });
-        showToast('✓ Call initiated');
-        callBtn.disabled = true;
-      } catch (err) {
-        showToast('❌ ' + err.message);
-      }
+        callStatus.textContent = '📞 Calling… waiting for someone to accept';
+        setCallUI(true, !video);
+        await window.videocall.start(currentGroup, video, callHandlers());
+      } catch (err) { setCallUI(false, false); callStatus.textContent = '❌ ' + err.message; showToast('❌ ' + err.message); }
+    }
+    voiceBtn.addEventListener('click', () => beginCall(false));
+    videoBtn.addEventListener('click', () => beginCall(true));
+
+    $('acceptCallBtn').addEventListener('click', async () => {
+      incomingBox.hidden = true;
+      try {
+        callStatus.textContent = '🟡 Connecting…';
+        setCallUI(true, false);
+        const type = await window.videocall.answer(currentGroup, callHandlers());
+        setCallUI(true, type !== 'video');
+      } catch (err) { setCallUI(false, false); showToast('❌ ' + err.message); }
+    });
+    $('declineCallBtn').addEventListener('click', () => {
+      incomingBox.hidden = true;
+      if (currentGroup) window.db.ref('groupcalls/' + currentGroup).remove();
     });
 
     toggleAudioBtn.addEventListener('click', () => {
-      audioEnabled = !audioEnabled;
-      window.videocall.toggleAudio(audioEnabled);
-      toggleAudioBtn.style.background = audioEnabled ? 'var(--accent)' : 'var(--red)';
-      showToast(audioEnabled ? '🎤 Audio on' : '🔇 Audio off');
+      audioOn = !audioOn; window.videocall.toggleAudio(audioOn);
+      toggleAudioBtn.classList.toggle('off', !audioOn); toggleAudioBtn.textContent = audioOn ? '🎤' : '🔇';
     });
-
     toggleVideoBtn.addEventListener('click', () => {
-      videoEnabled = !videoEnabled;
-      window.videocall.toggleVideo(videoEnabled);
-      toggleVideoBtn.style.background = videoEnabled ? 'var(--accent)' : 'var(--red)';
-      showToast(videoEnabled ? '📹 Video on' : '📴 Video off');
+      videoOn = !videoOn; window.videocall.toggleVideo(videoOn);
+      toggleVideoBtn.classList.toggle('off', !videoOn); toggleVideoBtn.textContent = videoOn ? '📹' : '📴';
     });
-
-    endCallBtn.addEventListener('click', () => {
-      window.videocall.endCall();
-      window.videocall.stopLocalStream();
-      localVideo.srcObject = null;
-      remoteVideo.srcObject = null;
-      localStreamStarted = false;
-      callBtn.disabled = false;
-      showToast('✕ Call ended');
-    });
+    endCallBtn.addEventListener('click', () => window.videocall.end());
+    window.addEventListener('beforeunload', () => { if (window.videocall.inCall()) window.videocall.end(); });
 
     // ===== NOTIFICATIONS =====
     function showToast(msg) {
