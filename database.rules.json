@@ -2,54 +2,79 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "saves": {
       "$ip": {
         ".read": "auth != null",
         ".write": "auth != null && $ip.matches(/^[A-Za-z0-9_:-]{3,60}$/)",
         ".validate": "newData.hasChildren(['text', 'timestamp'])",
-        "text": { ".validate": "newData.isString() && newData.val().length <= 100000" },
-        "timestamp": { ".validate": "newData.isNumber()" },
-        "by": { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "$other": { ".validate": false }
+        "text": {
+          ".validate": "newData.isString() && newData.val().length <= 100000"
+        },
+        "timestamp": {
+          ".validate": "newData.isNumber()"
+        },
+        "by": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
-
     "files": {
       "$ip": {
         ".read": "auth != null",
         "$id": {
           ".write": "auth != null && $ip.matches(/^[A-Za-z0-9_:-]{3,60}$/)",
           ".validate": "newData.hasChildren(['name', 'size', 'created'])",
-          "name": { ".validate": "newData.isString() && newData.val().length <= 300" },
-          "size": { ".validate": "newData.isNumber()" },
-          "type": { ".validate": "newData.isString() && newData.val().length <= 150" },
-          "created": { ".validate": "newData.isNumber()" },
-          "path": { ".validate": "newData.isString() && newData.val().length <= 500" },
-          "url": { ".validate": "newData.isString() && newData.val().length <= 2000" },
-          "inline": { ".validate": "newData.isBoolean()" },
-          "$other": { ".validate": false }
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 300"
+          },
+          "size": {
+            ".validate": "newData.isNumber()"
+          },
+          "type": {
+            ".validate": "newData.isString() && newData.val().length <= 150"
+          },
+          "created": {
+            ".validate": "newData.isNumber()"
+          },
+          "path": {
+            ".validate": "newData.isString() && newData.val().length <= 500"
+          },
+          "url": {
+            ".validate": "newData.isString() && newData.val().length <= 2000"
+          },
+          "inline": {
+            ".validate": "newData.isBoolean()"
+          },
+          "chunks": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     },
-
     "filedata": {
       "$ip": {
         "$id": {
           ".read": "auth != null",
           ".write": "auth != null && $ip.matches(/^[A-Za-z0-9_:-]{3,60}$/)",
-          ".validate": "newData.isString() && newData.val().length <= 1100000"
+          ".validate": "newData.hasChildren()",
+          "$chunk": {
+            ".validate": "$chunk.matches(/^[0-9]{1,3}$/) && newData.isString() && newData.val().length <= 260000"
+          }
         }
       }
     },
-
     "groupcalls": {
       "$room": {
         ".read": "auth != null && ($room.matches(/^(ip|code)~.+$/) || root.child('groups').child($room).child('members').child(auth.uid).exists())",
         ".write": "auth != null && ($room.matches(/^(ip|code)~.+$/) || root.child('groups').child($room).child('members').child(auth.uid).exists())"
       }
     },
-
     "groups": {
       "$gid": {
         "meta": {
@@ -64,15 +89,25 @@
           }
         },
         "messages": {
-          ".indexOn": ["ts"],
+          ".indexOn": [
+            "ts"
+          ],
           ".read": "auth != null && root.child('groups').child($gid).child('members').child(auth.uid).exists()",
           "$mid": {
             ".write": "auth != null && root.child('groups').child($gid).child('members').child(auth.uid).exists() && (!data.exists() || !newData.exists())",
             ".validate": "newData.hasChildren(['text', 'author', 'ts'])",
-            "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 2000" },
-            "author": { ".validate": "newData.isString() && newData.val().length <= 60" },
-            "ts": { ".validate": "newData.val() === now" },
-            "$other": { ".validate": false }
+            "text": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 2000"
+            },
+            "author": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "ts": {
+              ".validate": "newData.val() === now"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       }

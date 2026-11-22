@@ -5,7 +5,11 @@
    - Live gallery with image previews, download, copy link, delete; 7-day expiry */
 (function () {
   const WEEK = 7 * 24 * 60 * 60 * 1000;
-  const INLINE_MAX = 700 * 1024;
+  const INLINE_MAX = 700 * 1024;          // target size when an image has to be compressed
+  const COMPRESS_OVER = 2 * 1024 * 1024;   // images bigger than this are shrunk before fallback storage
+  const CHUNK = 250000;                    // characters per database chunk
+  const FALLBACK_MAX = 15 * 1024 * 1024;   // largest file stored in the database (no Firebase Storage)
+  let storageDown = false;                 // set when Storage stalls/fails, so later uploads skip the wait
   let ip = null, listening = false;
   const pending = new Map(); // id -> {name, pct}
 
@@ -67,28 +71,31 @@
 
     try {
       let stored = false, storageErr = null;
-      if (window.storage) {
+      if (window.storage && !storageDown) {
         try {
           const ref = window.storage.ref(`files/${ip}/${id}_${safe}`);
           const task = ref.put(file, { contentType: file.type || 'application/octet-stream' });
           // If Storage never starts (locked plan / missing bucket), cancel and use the fallback
-          let stall = setTimeout(() => task.cancel(), 12000);
+          let stall = setTimeout(() => task.cancel(), 10000);
           await new Promise((res, rej) => task.on('state_changed',
             s => { if (s.bytesTransferred > 0) { clearTimeout(stall); stall = null; } progress(s.bytesTransferred / s.totalBytes * 100); },
             e => { clearTimeout(stall); rej(e); }, () => { clearTimeout(stall); res(); }));
           meta.path = ref.fullPath;
           meta.url = await ref.getDownloadURL();
           stored = true;
-        } catch (err) { storageErr = err; console.warn('Storage upload failed, trying inline fallback:', err); }
+        } catch (err) { storageErr = err; storageDown = true; console.warn('Firebase Storage unavailable, saving in the database instead:', err); }
       }
       if (!stored) {
+        if (file.size > FALLBACK_MAX) throw new Error('This file is over 15MB. Larger files need Firebase Storage' + (storageErr ? ' (' + (storageErr.code || storageErr.message) + ')' : '') + '.');
         let data;
-        if (isImg(file.type) && file.type !== 'image/gif') { data = await compressImage(file); meta.type = 'image/jpeg'; }
-        else if (file.size <= INLINE_MAX) data = await readDataURL(file);
-        else throw new Error('Upload failed' + (storageErr ? ' (' + (storageErr.code || storageErr.message) + ')' : '') +
-          ' — files over 700KB need Firebase Storage rules/plan set up');
-        meta.inline = true; meta.size = Math.round(data.length * 0.75);
-        await window.db.ref(`filedata/${ip}/${id}`).set(data);
+        if (isImg(file.type) && file.type !== 'image/gif' && file.size > COMPRESS_OVER) { data = await compressImage(file); meta.type = 'image/jpeg'; }
+        else data = await readDataURL(file);
+        const n = Math.ceil(data.length / CHUNK);
+        for (let i = 0; i < n; i++) {
+          await window.db.ref(`filedata/${ip}/${id}/${i}`).set(data.slice(i * CHUNK, (i + 1) * CHUNK));
+          progress((i + 1) / n * 100);
+        }
+        meta.inline = true; meta.chunks = n; meta.size = Math.round(data.length * 0.75);
       }
       await metaRef().child(id).set(meta);
       return Object.assign({ id }, meta);
@@ -101,7 +108,20 @@
     await metaRef().child(id).remove();
   }
 
-  async function dataFor(id) { return (await window.db.ref(`filedata/${ip}/${id}`).once('value')).val(); }
+  // Reads a file stored in the database (a single string, or numbered chunks) and joins it
+  async function dataFor(id) {
+    const v = (await window.db.ref(`filedata/${ip}/${id}`).once('value')).val();
+    if (!v) return null;
+    if (typeof v === 'string') return v;
+    if (Array.isArray(v)) return v.join('');
+    return Object.keys(v).sort((x, y) => x - y).map(k => v[k]).join('');
+  }
+  function dataUrlToBlob(d) {
+    const i = d.indexOf(','), mime = (d.slice(5, i).split(';')[0]) || 'application/octet-stream';
+    const bin = atob(d.slice(i + 1)), len = bin.length, arr = new Uint8Array(len);
+    for (let k = 0; k < len; k++) arr[k] = bin.charCodeAt(k);
+    return new Blob([arr], { type: mime });
+  }
 
   let items = [];
   function render() {
@@ -129,12 +149,16 @@
       const thumb = c.querySelector('.file-thumb');
       if (isImg(m.type)) {
         const img = document.createElement('img'); img.alt = m.name; img.loading = 'lazy'; thumb.appendChild(img);
-        if (m.url) img.src = m.url; else dataFor(m.id).then(d => { if (d && /^data:image\/(png|jpe?g|gif|webp);base64,/.test(d)) img.src = d; });
+        if (m.url) img.src = m.url;
+        else if ((m.size || 0) <= COMPRESS_OVER) dataFor(m.id).then(d => { if (d && /^data:image\/(png|jpe?g|gif|webp);base64,/.test(d)) img.src = d; });
+        else { img.remove(); thumb.innerHTML = `<div class="file-icon">${window.icon('image')}</div>`; }
       }
       c.querySelector('[data-a="dl"]').onclick = async () => {
         if (m.url) { window.open(m.url, '_blank', 'noopener'); return; }
         const d = await dataFor(m.id); if (!d || !/^data:[\w.+\/-]*;base64,/.test(d)) return;
-        const a = document.createElement('a'); a.href = d; a.download = m.name; a.click();
+        const url = URL.createObjectURL(dataUrlToBlob(d));
+        const a = document.createElement('a'); a.href = url; a.download = m.name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
       };
       const cp = c.querySelector('[data-a="cp"]');
       if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(m.url); window.showToast && showToast('Link copied'); } catch (_) {} };

@@ -1,0 +1,8 @@
+/* Runs before first paint so the saved theme never flashes. */
+(function () {
+  try {
+    var d = document.documentElement, m = localStorage.getItem('qs_theme'), a = localStorage.getItem('qs_accent');
+    if (m === 'light' || m === 'dark') d.setAttribute('data-theme', m);
+    if (a && a !== 'blue' && /^(violet|green|orange|rose)$/.test(a)) d.setAttribute('data-accent', a);
+  } catch (e) {}
+})();

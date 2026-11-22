@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script src="js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat – QuickShare</title>
   <link rel="icon" type="image/png" href="favicon.png">
@@ -181,7 +182,7 @@
 <!-- NAV -->
 <nav>
     <div class="nav-left">
-      <a href="index.html" class="nav-logo" aria-label="QuickShare home"><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo-light.png" alt="" class="logo-mark"></picture><span>QuickShare</span></a>
+      <a href="index.html" class="nav-logo" aria-label="QuickShare home"><img src="logo-light.png" alt="" class="logo-mark logo-l"><img src="logo-dark.png" alt="" class="logo-mark logo-d"><span>QuickShare</span></a>
       <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-active">Chat</a><a href="about.html" class="">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="">Privacy</a></div>
     </div>
     <div class="nav-right"><div class="my-name-badge" id="nameBadge" onclick="openNameModal()" title="Click to change your name">
@@ -251,6 +252,7 @@
     <div class="group-list" id="groupList">
       <div class="no-groups">Your joined groups appear here.<br>Create or join one above.</div>
     </div>
+    <aside class="ad-slot" data-ad="chat-sidebar" aria-label="Advertisement" hidden></aside>
   </div>
 
   <!-- MAIN -->
@@ -597,5 +599,7 @@ function startVideoCall() { if (!activeGroupId) return toast('Open a group first
 // ── INIT ──
 renderGroupList();
 </script>
+<script src="js/theme.js"></script>
+<script src="js/ads.js"></script>
 </body>
 </html>
