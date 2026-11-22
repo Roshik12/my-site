@@ -26,6 +26,13 @@
     return '📦';
   }
 
+  function kindFor(m) {
+    const n = (m.name || '').toLowerCase(), t = m.type || '';
+    if (t.startsWith('image/')) return 'image'; if (t.startsWith('video/')) return 'video'; if (t.startsWith('audio/')) return 'audio';
+    if (n.endsWith('.pdf')) return 'pdf'; if (/\.(zip|rar|7z|tar|gz)$/.test(n)) return 'zip';
+    if (/\.(xlsx?|csv)$/.test(n)) return 'sheet'; if (/\.(docx?|txt|md|rtf)$/.test(n)) return 'doc'; return 'file';
+  }
+
   function compressImage(file) {
     return new Promise((resolve, reject) => {
       const img = new Image(), url = URL.createObjectURL(file);
@@ -62,8 +69,11 @@
         try {
           const ref = window.storage.ref(`files/${ip}/${id}_${safe}`);
           const task = ref.put(file, { contentType: file.type || 'application/octet-stream' });
+          // If Storage never starts (locked plan / missing bucket), cancel and use the fallback
+          let stall = setTimeout(() => task.cancel(), 12000);
           await new Promise((res, rej) => task.on('state_changed',
-            s => progress(s.bytesTransferred / s.totalBytes * 100), rej, res));
+            s => { if (s.bytesTransferred > 0) { clearTimeout(stall); stall = null; } progress(s.bytesTransferred / s.totalBytes * 100); },
+            e => { clearTimeout(stall); rej(e); }, () => { clearTimeout(stall); res(); }));
           meta.path = ref.fullPath;
           meta.url = await ref.getDownloadURL();
           stored = true;
@@ -104,7 +114,7 @@
     });
     if (!items.length && !pending.size) { g.innerHTML = '<div class="files-empty">No files yet — uploads appear here and sync to every device on your network.</div>'; return; }
     items.forEach(m => {
-      const c = document.createElement('div'); c.className = 'file-card';
+      const c = document.createElement('div'); c.className = 'file-card'; c.dataset.kind = kindFor(m);
       const left = Math.max(0, Math.ceil((m.created + WEEK - Date.now()) / 86400000));
       c.innerHTML = `<div class="file-thumb">${isImg(m.type) ? '' : `<div class="file-icon">${iconFor(m)}</div>`}</div>
         <div class="file-name" title="${esc(m.name)}">${esc(m.name)}</div>

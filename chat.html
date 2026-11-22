@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat – QuickShare</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Firebase Compat SDK (worldwide accessible) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,26 +12,20 @@
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24;
-      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
-      --accent: #7c6aff; --accent2: #a78bfa; --accent-glow: rgba(124,106,255,0.22);
-      --text: #f0f0f8; --text-muted: #6b6b80; --text-dim: #3a3a4a;
-      --green: #4ade80; --red: #f87171; --yellow: #fbbf24;
-    }
+    
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    body::before { content:''; position:fixed; top:-150px; left:-150px; width:500px; height:500px; background:radial-gradient(circle,rgba(124,106,255,0.1) 0%,transparent 70%); pointer-events:none; z-index:0; }
+    body::before { content:''; position:fixed; top:-150px; left:-150px; width:500px; height:500px; background:radial-gradient(circle,color-mix(in srgb, var(--accent) 10%, transparent) 0%,transparent 70%); pointer-events:none; z-index:0; }
 
     /* ── NAV ── */
-    nav { position:relative; z-index:100; background:rgba(10,10,15,0.92); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:62px; flex-shrink:0; }
-    .nav-logo { font-family:'Space Mono',monospace; font-size:17px; font-weight:700; background:linear-gradient(135deg,#7c6aff,#a78bfa,#c4b5fd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-decoration:none; display:flex; align-items:center; gap:9px; }
+    nav { position:relative; z-index:100; background:color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter:blur(20px); border-bottom:1px solid color-mix(in srgb, var(--text) 7%, transparent); padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:62px; flex-shrink:0; }
+    .nav-logo { font-family:'Space Mono',monospace; font-size:17px; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-decoration:none; display:flex; align-items:center; gap:9px; }
     .nav-logo img { height:27px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.4); }
     .nav-links { display:flex; gap:22px; align-items:center; margin-left:28px; }
-    .nav-links a { color:#6b6b80; text-decoration:none; font-size:13px; font-weight:500; transition:color 0.2s; }
-    .nav-links a:hover { color:#f0f0f8; }
-    .nav-links a.nav-active { color:#f0f0f8; }
-    .nav-links a.nav-chat { color:#a78bfa; font-weight:600; }
-    .nav-badge { background:rgba(124,106,255,0.18); border:1px solid rgba(124,106,255,0.3); color:#a78bfa; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
+    .nav-links a { color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:500; transition:color 0.2s; }
+    .nav-links a:hover { color:var(--text); }
+    .nav-links a.nav-active { color:var(--text); }
+    .nav-links a.nav-chat { color:var(--accent2); font-weight:600; }
+    .nav-badge { background:color-mix(in srgb, var(--accent) 18%, transparent); border:1px solid color-mix(in srgb, var(--accent) 30%, transparent); color:var(--accent2); font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
     @media(max-width:640px){ .nav-links a:not(.nav-active):not(.nav-chat){display:none;} nav{padding:0 16px;} }
 
     /* ── LAYOUT ── */
@@ -50,13 +44,13 @@
       color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px;
       padding:9px 11px; outline:none; width:100%; transition:border-color 0.2s;
     }
-    input:focus { border-color:rgba(124,106,255,0.5); box-shadow:0 0 0 3px rgba(124,106,255,0.08); }
+    input:focus { border-color:color-mix(in srgb, var(--accent) 50%, transparent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent); }
     input::placeholder { color:var(--text-dim); }
     .btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; width:100%; }
-    .btn:hover { background:rgba(255,255,255,0.05); border-color:var(--border-hover); color:var(--text); }
-    .btn-primary { background:linear-gradient(135deg,#7c6aff,#9b8cff); border-color:transparent; color:#fff; box-shadow:0 4px 14px rgba(124,106,255,0.35); }
-    .btn-primary:hover { background:linear-gradient(135deg,#8b7aff,#a99cff); transform:translateY(-1px); box-shadow:0 6px 20px rgba(124,106,255,0.45); }
-    .btn-outline { background:transparent; border:1px solid rgba(124,106,255,0.35); color:var(--accent2); }
+    .btn:hover { background:color-mix(in srgb, var(--text) 5%, transparent); border-color:var(--border-hover); color:var(--text); }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; color:#fff; box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .btn-primary:hover { background:linear-gradient(135deg,#8b7aff,#a99cff); transform:translateY(-1px); box-shadow:0 6px 20px color-mix(in srgb, var(--accent) 45%, transparent); }
+    .btn-outline { background:transparent; border:1px solid color-mix(in srgb, var(--accent) 35%, transparent); color:var(--accent2); }
     .btn-outline:hover { background:var(--accent-glow); color:#fff; }
     .tab-row { display:flex; gap:6px; }
     .tab-btn { flex:1; padding:7px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:11px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; }
@@ -66,8 +60,8 @@
     .group-list { flex:1; overflow-y:auto; padding:10px 10px; display:flex; flex-direction:column; gap:4px; }
     .group-item { padding:10px 12px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:10px; }
     .group-item:hover { background:var(--surface2); border-color:var(--border); }
-    .group-item.active { background:rgba(124,106,255,0.1); border-color:rgba(124,106,255,0.25); }
-    .group-avatar { width:36px; height:36px; border-radius:10px; background:var(--accent-glow); border:1px solid rgba(124,106,255,0.25); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+    .group-item.active { background:color-mix(in srgb, var(--accent) 10%, transparent); border-color:color-mix(in srgb, var(--accent) 25%, transparent); }
+    .group-avatar { width:36px; height:36px; border-radius:10px; background:var(--accent-glow); border:1px solid color-mix(in srgb, var(--accent) 25%, transparent); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
     .group-name { font-size:13px; font-weight:600; }
     .group-sub { font-size:11px; color:var(--text-muted); }
     .no-groups { padding:24px 16px; text-align:center; color:var(--text-dim); font-size:12px; line-height:1.7; }
@@ -91,7 +85,7 @@
     .chat-view.open { display:flex; }
 
     .chat-topbar { padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:12px; flex-shrink:0; }
-    .chat-topbar-avatar { width:38px; height:38px; border-radius:10px; background:var(--accent-glow); border:1px solid rgba(124,106,255,0.3); display:flex; align-items:center; justify-content:center; font-size:17px; }
+    .chat-topbar-avatar { width:38px; height:38px; border-radius:10px; background:var(--accent-glow); border:1px solid color-mix(in srgb, var(--accent) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:17px; }
     .chat-topbar-info h3 { font-size:14px; font-weight:700; }
     .chat-topbar-info p { font-size:11px; color:var(--text-muted); }
     .chat-topbar-actions { margin-left:auto; display:flex; gap:8px; }
@@ -101,24 +95,24 @@
     .chat-messages { flex:1; overflow-y:auto; padding:20px 20px 12px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
     .chat-messages::-webkit-scrollbar { width:4px; }
     .chat-messages::-webkit-scrollbar-track { background:transparent; }
-    .chat-messages::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background:color-mix(in srgb, var(--text) 8%, transparent); border-radius:4px; }
 
     .msg { display:flex; flex-direction:column; max-width:68%; gap:2px; }
     .msg.own { align-self:flex-end; align-items:flex-end; }
     .msg.other { align-self:flex-start; align-items:flex-start; }
     .msg-author { font-size:10px; font-weight:700; color:var(--accent2); letter-spacing:0.3px; padding:0 4px; }
     .msg-bubble { padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.55; word-break:break-word; }
-    .msg.own .msg-bubble { background:linear-gradient(135deg,#7c6aff,#9b8cff); color:#fff; border-bottom-right-radius:4px; }
+    .msg.own .msg-bubble { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border-bottom-right-radius:4px; }
     .msg.other .msg-bubble { background:var(--surface2); color:var(--text); border-bottom-left-radius:4px; border:1px solid var(--border); }
     .msg-time { font-size:10px; color:var(--text-dim); padding:0 4px; font-family:'Space Mono',monospace; }
-    .msg-system { align-self:center; font-size:11px; color:var(--text-dim); font-family:'Space Mono',monospace; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:20px; padding:4px 14px; }
+    .msg-system { align-self:center; font-size:11px; color:var(--text-dim); font-family:'Space Mono',monospace; background:color-mix(in srgb, var(--text) 3%, transparent); border:1px solid var(--border); border-radius:20px; padding:4px 14px; }
 
     .chat-inputbar { padding:14px 16px; border-top:1px solid var(--border); background:var(--surface); display:flex; gap:10px; align-items:flex-end; flex-shrink:0; }
     #msgInput { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; padding:11px 14px; outline:none; resize:none; min-height:42px; max-height:120px; transition:border-color 0.2s; line-height:1.5; }
-    #msgInput:focus { border-color:rgba(124,106,255,0.45); }
+    #msgInput:focus { border-color:color-mix(in srgb, var(--accent) 45%, transparent); }
     #msgInput::placeholder { color:var(--text-dim); }
-    .send-btn { width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,#7c6aff,#9b8cff); border:none; color:#fff; cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; box-shadow:0 4px 14px rgba(124,106,255,0.35); }
-    .send-btn:hover { transform:scale(1.07); box-shadow:0 6px 20px rgba(124,106,255,0.5); }
+    .send-btn { width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; color:#fff; cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .send-btn:hover { transform:scale(1.07); box-shadow:0 6px 20px color-mix(in srgb, var(--accent) 50%, transparent); }
     .send-btn:active { transform:scale(0.96); }
 
     /* ── MODAL ── */
@@ -141,13 +135,13 @@
     .call-videos { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .call-video-box { background:#0a0a0a; border-radius:12px; overflow:hidden; aspect-ratio:16/9; position:relative; display:flex; align-items:center; justify-content:center; }
     .call-video-box video { width:100%; height:100%; object-fit:cover; }
-    .call-video-box span { position:absolute; bottom:6px; left:8px; font-size:10px; color:rgba(255,255,255,0.6); font-family:'Space Mono',monospace; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:10px; }
+    .call-video-box span { position:absolute; bottom:6px; left:8px; font-size:10px; color:color-mix(in srgb, var(--text) 60%, transparent); font-family:'Space Mono',monospace; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:10px; }
     .call-status { font-size:12px; color:var(--text-muted); font-family:'Space Mono',monospace; text-align:center; }
     .call-id-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-family:'Space Mono',monospace; font-size:12px; color:var(--accent2); word-break:break-all; min-height:36px; display:flex; align-items:center; gap:8px; }
     .call-id-box button { margin-left:auto; background:none; border:none; color:var(--accent2); cursor:pointer; font-size:14px; flex-shrink:0; }
     .call-row { display:flex; gap:8px; }
     .call-row input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Space Mono',monospace; font-size:12px; padding:10px 12px; outline:none; }
-    .call-row input:focus { border-color:rgba(124,106,255,0.5); }
+    .call-row input:focus { border-color:color-mix(in srgb, var(--accent) 50%, transparent); }
     .call-row input::placeholder { color:var(--text-dim); }
     .call-controls { display:flex; justify-content:center; gap:12px; }
     .c-btn { width:48px; height:48px; border-radius:50%; border:none; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
@@ -157,16 +151,16 @@
     .c-btn:hover { transform:scale(1.08); }
     #nameModal { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
     #nameModal.hidden { display:none; }
-    .name-card { background:var(--surface); border:1px solid rgba(124,106,255,0.3); border-radius:20px; padding:32px; width:360px; max-width:90vw; display:flex; flex-direction:column; gap:18px; box-shadow:0 30px 80px rgba(0,0,0,0.7); }
+    .name-card { background:var(--surface); border:1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius:20px; padding:32px; width:360px; max-width:90vw; display:flex; flex-direction:column; gap:18px; box-shadow:0 30px 80px rgba(0,0,0,0.7); }
     .name-card h2 { font-size:20px; font-weight:700; }
     .name-card p { font-size:13px; color:var(--text-muted); line-height:1.6; }
     .name-card input { background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; padding:12px 14px; outline:none; width:100%; transition:border-color 0.2s; }
-    .name-card input:focus { border-color:rgba(124,106,255,0.5); box-shadow:0 0 0 3px rgba(124,106,255,0.1); }
+    .name-card input:focus { border-color:color-mix(in srgb, var(--accent) 50%, transparent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent); }
     .name-card input::placeholder { color:var(--text-dim); }
 
     /* ── NAME BADGE in nav ── */
     .my-name-badge { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; cursor:pointer; transition:all 0.2s; }
-    .my-name-badge:hover { border-color:rgba(124,106,255,0.35); color:var(--text); }
+    .my-name-badge:hover { border-color:color-mix(in srgb, var(--accent) 35%, transparent); color:var(--text); }
     .my-name-badge .dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 5px rgba(74,222,128,0.5); flex-shrink:0; }
 
     @media(max-width:700px) {
@@ -175,61 +169,22 @@
       .sidebar.mobile-open { display:flex; position:fixed; inset:62px 0 0 0; z-index:50; width:100%; }
     }
   </style>
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <div style="display:flex;align-items:center;flex:1;">
-    <a href="index.html" class="nav-logo">
-      <img src="logo.svg" alt="QuickShare logo">
-      <span>QuickShare</span>
-    </a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="chat.html" class="nav-chat nav-active">Chat</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="privacy.html">Privacy</a>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo"><img src="logo.svg" alt=""><span>QuickShare</span></a>
+      <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-active">Chat</a><a href="about.html" class="">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="">Privacy</a></div>
     </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div class="my-name-badge" id="nameBadge" onclick="openNameModal()" title="Click to change your name">
+    <div class="nav-right"><div class="my-name-badge" id="nameBadge" onclick="openNameModal()" title="Click to change your name">
       <span class="dot"></span>
       <span id="badgeNameText">…</span>
-    </div>
-    <span class="nav-badge">FREE</span>
-  </div>
-</nav>
+    </div><span class="nav-badge">Free</span></div>
+  </nav>
 
-<!-- CALL MODAL -->
-<div id="callModal">
-  <div class="call-card">
-    <h3 id="callModalTitle">📹 Video Call</h3>
-    <div class="call-videos">
-      <div class="call-video-box"><video id="callLocalVideo" autoplay muted playsinline></video><span>You</span></div>
-      <div class="call-video-box"><video id="callRemoteVideo" autoplay playsinline></video><span>Remote</span></div>
-    </div>
-    <div class="call-status" id="callStatus">Ready</div>
-    <div class="call-id-box">
-      <span id="callIdDisplay" style="color:var(--text-muted);">Start a call to get a Call ID</span>
-      <button onclick="navigator.clipboard.writeText(document.getElementById('callIdDisplay').textContent).then(()=>toast('✓ Call ID copied'))" title="Copy Call ID">📋</button>
-    </div>
-    <div class="call-row">
-      <input id="callJoinId" placeholder="Paste Call ID to join…">
-      <button class="c-btn green" onclick="joinCall()" title="Join call">📞</button>
-    </div>
-    <div class="call-controls">
-      <button class="c-btn gray" id="callMuteBtn" onclick="toggleCallAudio()" title="Mute">🎤</button>
-      <button class="c-btn green" onclick="makeCall()" title="Start call">☎️</button>
-      <button class="c-btn red" onclick="endCall()" title="End call">📵</button>
-      <button class="c-btn gray" id="callCamBtn" onclick="toggleCallVideo()" title="Camera">📹</button>
-    </div>
-    <button class="btn" onclick="closeCallModal()" style="font-size:12px;">✕ Close</button>
-  </div>
-</div>
-
-<!-- NAME MODAL -->
 <div id="nameModal" class="hidden">
   <div class="name-card">
     <div style="font-size:36px;text-align:center;">👤</div>
@@ -330,6 +285,8 @@
 <div id="toast"></div>
 
 <!-- FIREBASE + APP SCRIPT -->
+<script src="js/videocall.js"></script>
+<script src="js/callui.js"></script>
 <script>
 // ── Firebase config ──
 const firebaseConfig = {
@@ -394,6 +351,7 @@ let db, activeGroupId = null, msgListener = null;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  window.db = db;
   db.ref('.info/connected').on('value', snap => {
     const online = snap.val();
     document.getElementById('connDot').className = 'conn-dot' + (online ? '' : ' disconnected');
@@ -460,6 +418,7 @@ async function joinGroup() {
 // ── OPEN CHAT ──
 function openChat(groupId) {
   activeGroupId = groupId;
+  callUI.watch(groupId, '#' + groupId);
 
   // Add to sidebar list
   if (!joinedGroups.includes(groupId)) {
@@ -553,6 +512,7 @@ function escHtml(str) {
 // ── LEAVE ──
 function leaveGroup() {
   if (!activeGroupId) return;
+  callUI.unwatch(activeGroupId);
   if (msgListener) {
     db.ref('groups/' + msgListener + '/messages').off('child_added');
     msgListener = null;
@@ -616,108 +576,8 @@ function toast(msg, dur = 2400) {
 }
 
 // ── VOICE / VIDEO CALL ──
-let pc = null, localStream = null, currentCallId = null, audioOn = true, videoOn = true;
-const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
-
-function startVoiceCall() { openCallModal(true); }
-function startVideoCall() { openCallModal(false); }
-
-function openCallModal(audioOnly) {
-  const modal = document.getElementById('callModal');
-  const title = document.getElementById('callModalTitle');
-  title.textContent = audioOnly ? '📞 Voice Call' : '📹 Video Call';
-  modal.dataset.audioOnly = audioOnly;
-  modal.classList.add('open');
-  document.getElementById('callIdDisplay').textContent = '';
-  document.getElementById('callJoinId').value = '';
-  document.getElementById('callStatus').textContent = 'Ready';
-  initLocalStream(audioOnly);
-}
-
-function closeCallModal() {
-  document.getElementById('callModal').classList.remove('open');
-  endCall();
-}
-
-async function initLocalStream(audioOnly) {
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: audioOnly ? false : { width: { max: 1280 }, height: { max: 720 } } });
-    const lv = document.getElementById('callLocalVideo');
-    if (!audioOnly) { lv.srcObject = localStream; lv.style.display = 'block'; }
-    else lv.style.display = 'none';
-  } catch(e) { toast('❌ Camera/mic access denied'); }
-}
-
-async function makeCall() {
-  if (!localStream) return toast('❌ Allow mic/camera first');
-  currentCallId = 'call_' + Date.now();
-  document.getElementById('callIdDisplay').textContent = currentCallId;
-  document.getElementById('callStatus').textContent = 'Waiting for someone to join…';
-  pc = new RTCPeerConnection(rtcConfig);
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  pc.ontrack = e => { document.getElementById('callRemoteVideo').srcObject = e.streams[0]; };
-  pc.onicecandidate = e => { if (e.candidate && db) db.ref('calls/' + currentCallId + '/caller_ice').push(e.candidate.toJSON()); };
-  const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-  await pc.setLocalDescription(offer);
-  await db.ref('calls/' + currentCallId).set({ offer: offer.toJSON(), created: Date.now() });
-  db.ref('calls/' + currentCallId + '/answer').on('value', async snap => {
-    const ans = snap.val();
-    if (ans && pc && pc.signalingState === 'have-local-offer') {
-      await pc.setRemoteDescription(new RTCSessionDescription(ans));
-      document.getElementById('callStatus').textContent = 'Connected!';
-    }
-  });
-  db.ref('calls/' + currentCallId + '/callee_ice').on('child_added', snap => {
-    const c = snap.val(); if (c && pc) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-  });
-  toast('✓ Share the Call ID to connect');
-}
-
-async function joinCall() {
-  const cid = document.getElementById('callJoinId').value.trim();
-  if (!cid) return toast('❌ Enter a Call ID');
-  if (!localStream) await initLocalStream(document.getElementById('callModal').dataset.audioOnly === 'true');
-  if (!localStream) return;
-  currentCallId = cid;
-  const snap = await db.ref('calls/' + cid + '/offer').once('value');
-  const offer = snap.val();
-  if (!offer) return toast('❌ Call not found');
-  pc = new RTCPeerConnection(rtcConfig);
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  pc.ontrack = e => { document.getElementById('callRemoteVideo').srcObject = e.streams[0]; };
-  pc.onicecandidate = e => { if (e.candidate && db) db.ref('calls/' + cid + '/callee_ice').push(e.candidate.toJSON()); };
-  await pc.setRemoteDescription(new RTCSessionDescription(offer));
-  const answer = await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-  await db.ref('calls/' + cid + '/answer').set(answer.toJSON());
-  db.ref('calls/' + cid + '/caller_ice').on('child_added', snap => {
-    const c = snap.val(); if (c && pc) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-  });
-  document.getElementById('callStatus').textContent = 'Connected!';
-  toast('✓ Joined call!');
-}
-
-function endCall() {
-  if (pc) { pc.close(); pc = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if (currentCallId && db) { db.ref('calls/' + currentCallId).remove(); currentCallId = null; }
-  document.getElementById('callLocalVideo').srcObject = null;
-  document.getElementById('callRemoteVideo').srcObject = null;
-  document.getElementById('callStatus').textContent = 'Call ended';
-}
-
-function toggleCallAudio() {
-  if (!localStream) return;
-  audioOn = !audioOn;
-  localStream.getAudioTracks().forEach(t => t.enabled = audioOn);
-  document.getElementById('callMuteBtn').textContent = audioOn ? '🎤' : '🔇';
-}
-function toggleCallVideo() {
-  if (!localStream) return;
-  videoOn = !videoOn;
-  localStream.getVideoTracks().forEach(t => t.enabled = videoOn);
-  document.getElementById('callCamBtn').textContent = videoOn ? '📹' : '📴';
-}
+function startVoiceCall() { if (!activeGroupId) return toast('Open a group first'); callUI.start(activeGroupId, { audioOnly: true, title: '#' + activeGroupId }); }
+function startVideoCall() { if (!activeGroupId) return toast('Open a group first'); callUI.start(activeGroupId, { audioOnly: false, title: '#' + activeGroupId }); }
 
 // ── INIT ──
 renderGroupList();

@@ -13,7 +13,7 @@
 
   const peerId = 'p_' + Math.random().toString(36).slice(2, 10);
   let pc = null, localStream = null, gid = null, role = null;
-  let pendingCandidates = [], listeners = [], watchRef = null, watchFn = null, handlers = {};
+  let pendingCandidates = [], listeners = [], handlers = {};
 
   const db = () => window.db;
   const callRef = () => db().ref('groupcalls/' + gid);
@@ -131,18 +131,24 @@
     } catch (err) { cleanup(false); throw err; }
   }
 
-  // Watch for incoming calls in a group
-  function watch(groupId, onIncoming) {
-    unwatch();
-    watchRef = db().ref('groupcalls/' + groupId);
-    watchFn = snap => {
+  // Watch for incoming calls in one or more rooms (group id, ip~..., code~...)
+  const watchers = {};
+  function watch(room, onIncoming) {
+    unwatch(room);
+    const ref = db().ref('groupcalls/' + room);
+    const fn = snap => {
       const d = snap.val();
       if (d && d.offer && !d.answer && d.from !== peerId && !pc) onIncoming({ callType: d.callType || 'video' });
       else onIncoming(null);
     };
-    watchRef.on('value', watchFn);
+    ref.on('value', fn);
+    watchers[room] = [ref, fn];
   }
-  function unwatch() { if (watchRef) watchRef.off('value', watchFn); watchRef = null; }
+  function unwatch(room) {
+    if (room === undefined) { Object.keys(watchers).forEach(unwatch); return; }
+    const w = watchers[room];
+    if (w) { w[0].off('value', w[1]); delete watchers[room]; }
+  }
 
   function cleanup(remoteEnded) {
     offAll();

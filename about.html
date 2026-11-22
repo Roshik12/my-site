@@ -4,29 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About – QuickShare</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24;
-      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
-      --accent: #7c6aff; --accent2: #a78bfa; --accent-glow: rgba(124,106,255,0.25);
-      --text: #f0f0f8; --text-muted: #6b6b80; --text-dim: #3a3a4a;
-      --green: #4ade80; --yellow: #fbbf24; --red: #f87171;
-    }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-    body::before { content: ''; position: fixed; top: -200px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%); pointer-events: none; z-index: 0; }
-    body::after { content: ''; position: fixed; bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
     
-    .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; text-decoration: none; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: -200px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    body::after { content: ''; position: fixed; bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, color-mix(in srgb, var(--accent2) 8%, transparent) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    
+    .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; text-decoration: none; }
     .nav-links { display: flex; gap: 24px; align-items: center; }
     .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover, .nav-links a.active { color: var(--text); }
-    .nav-badge { background: var(--accent-glow); border: 1px solid rgba(124,106,255,0.3); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .nav-badge { background: var(--accent-glow); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
 
     .page-wrap { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 64px 24px 100px; }
     .page-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent2); font-family: 'Space Mono', monospace; margin-bottom: 14px; }
-    .page-title { font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); x: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+    .page-title { font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%); x: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
     .page-sub { font-size: 17px; color: var(--text-muted); line-height: 1.7; margin-bottom: 60px; }
 
     .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
@@ -38,7 +32,7 @@
 
     .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 32px; }
     .value-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: border-color 0.2s; }
-    .value-card:hover { border-color: rgba(124,106,255,0.3); }
+    .value-card:hover { border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
     .value-icon { font-size: 24px; margin-bottom: 12px; display: block; }
     .value-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
     .value-card p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
@@ -53,38 +47,28 @@
     footer a:hover { text-decoration: underline; }
     @media (max-width: 600px) { .stat-strip { grid-template-columns: 1fr; } .nav-links a:not(.active) { display: none; } }
   
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
-    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #7c6aff, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+    nav { position: sticky; top: 0; z-index: 100; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(20px); border-bottom: 1px solid color-mix(in srgb, var(--text) 7%, transparent); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .nav-logo { font-family: 'Space Mono', monospace; font-size: 17px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; display: flex; align-items: center; gap: 9px; }
     .nav-logo img { height: 27px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
     .nav-links { display: flex; gap: 22px; align-items: center; margin-left: 28px; }
-    .nav-links a { color: #6b6b80; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
-    .nav-links a:hover { color: #f0f0f8; }
-    .nav-links a.nav-active { color: #f0f0f8; }
-    .nav-links a.nav-chat { color: #a78bfa; font-weight: 600; }
-    .nav-links a.nav-chat:hover { color: #c4b5fd; }
-    .nav-badge { background: rgba(124,106,255,0.18); border: 1px solid rgba(124,106,255,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; position: relative; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.nav-active { color: var(--text); }
+    .nav-links a.nav-chat { color: var(--accent2); font-weight: 600; }
+    .nav-links a.nav-chat:hover { color: var(--accent2); }
+    .nav-badge { background: color-mix(in srgb, var(--accent) 18%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
     @media (max-width: 640px) { .nav-links a:not(.nav-active):not(.nav-chat) { display: none; } nav { padding: 0 16px; } }
 
   </style>
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
     <nav>
-    <div style="display:flex;align-items:center;flex:1;">
-      <a href="index.html" class="nav-logo">
-        <img src="logo.svg" alt="QuickShare logo">
-        <span>QuickShare</span>
-      </a>
-      <div class="nav-links">
-        <a href="index.html" class="">Home</a>
-        <a href="chat.html" class="nav-chat">Chat</a>
-        <a href="about.html" class="nav-active">About</a>
-        <a href="contact.html" class="">Contact</a>
-        <a href="privacy.html" class="">Privacy</a>
-      </div>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo"><img src="logo.svg" alt=""><span>QuickShare</span></a>
+      <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-chat">Chat</a><a href="about.html" class="nav-active">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="">Privacy</a></div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span class="nav-badge">FREE</span>
-    </div>
+    <div class="nav-right"><span class="nav-badge">Free</span></div>
   </nav>
 
   <div class="page-wrap">
@@ -151,9 +135,6 @@
     </div>
   </div>
 
-  <footer>
-    © 2026 quick/share · synced to your ip ·
-    <a href="about.html">about</a> · <a href="contact.html">contact</a> · <a href="privacy.html">privacy</a>
-  </footer>
+  <footer>© 2026 QuickShare · <a href="about.html">About</a> · <a href="contact.html">Contact</a> · <a href="privacy.html">Privacy</a></footer>
 </body>
 </html>
