@@ -9,6 +9,7 @@
   <!-- Firebase Compat SDK (worldwide accessible) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -312,6 +313,7 @@ function getCookie(name) {
 // ── USERNAME (cookie-persisted) ──
 let myName = getCookie('qs_username') || '';
 let joinedGroups = JSON.parse(getCookie('qs_groups') || localStorage.getItem('qs_groups') || '[]');
+joinedGroups = (Array.isArray(joinedGroups) ? joinedGroups : []).filter(g => typeof g === 'string' && /^[a-z0-9_-]{2,30}$/.test(g));
 let sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
 // ── NAME MODAL ──
@@ -350,6 +352,7 @@ let db, activeGroupId = null, msgListener = null;
 
 try {
   firebase.initializeApp(firebaseConfig);
+  window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); toast('❌ Sign-in failed — please reload'); return null; });
   db = firebase.database();
   window.db = db;
   db.ref('.info/connected').on('value', snap => {
@@ -377,6 +380,13 @@ function switchTab(tab) {
   document.getElementById('tabCreate').className = 'tab-btn' + (tab === 'create' ? ' active' : '');
 }
 
+// ── GROUP SECURITY: the password is never stored. Only a hash is saved (and the database
+//    rules forbid reading it). Joining proves you know the password by sending the same hash.
+async function pwHash(id, pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('qs1:' + id + ':' + pw));
+  return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
 // ── CREATE GROUP ──
 async function createGroup() {
   const id = document.getElementById('createId').value.trim().replace(/\s+/g, '-').toLowerCase();
@@ -384,18 +394,16 @@ async function createGroup() {
   if (!id) return toast('❌ Enter a group ID');
   if (!/^[a-z0-9\-_]{2,30}$/.test(id)) return toast('❌ ID: lowercase letters, numbers, dashes only');
   try {
-    const snap = await db.ref('groups/' + id).once('value');
-    if (snap.val()) return toast('❌ Group ID already taken — try another');
-    await db.ref('groups/' + id).set({
-      id, password: pw || '', created: Date.now(),
-      createdBy: myName, memberCount: 1
-    });
+    await window.authReady;
+    const uid = firebase.auth().currentUser.uid, h = await pwHash(id, pw);
+    try { await db.ref('groups/' + id + '/meta/pwHash').set(h); }
+    catch (e) { return toast('❌ Group ID already taken — try another'); }
+    await db.ref('groups/' + id + '/members/' + uid).set(h);
     toast('✓ Group created!');
     document.getElementById('createId').value = '';
     document.getElementById('createPw').value = '';
     openChat(id);
-    openChat(id);
-  } catch(e) { toast('❌ ' + e.message); }
+  } catch (e) { toast('❌ Could not create group'); }
 }
 
 // ── JOIN GROUP ──
@@ -404,19 +412,20 @@ async function joinGroup() {
   const pw = document.getElementById('joinPw').value;
   if (!id) return toast('❌ Enter a group ID');
   try {
-    const snap = await db.ref('groups/' + id).once('value');
-    const data = snap.val();
-    if (!data) return toast('❌ Group not found');
-    if (data.password && data.password !== pw) return toast('❌ Wrong password');
+    await window.authReady;
+    const uid = firebase.auth().currentUser.uid, h = await pwHash(id, pw);
+    try { await db.ref('groups/' + id + '/members/' + uid).set(h); }
+    catch (e) { return toast('❌ Wrong group ID or password'); }
     toast('✓ Joined ' + id);
     document.getElementById('joinId').value = '';
     document.getElementById('joinPw').value = '';
     openChat(id);
-  } catch(e) { toast('❌ ' + e.message); }
+  } catch (e) { toast('❌ Could not join group'); }
 }
 
 // ── OPEN CHAT ──
-function openChat(groupId) {
+async function openChat(groupId) {
+  await window.authReady;
   activeGroupId = groupId;
   callUI.watch(groupId, '#' + groupId);
 
@@ -462,6 +471,9 @@ function openChat(groupId) {
         return;
       }
       renderMessage(msg);
+    }, err => {
+      addSystemMsg('Access denied — rejoin this group with its password.');
+      toast('❌ Rejoin the group with its password');
     });
 
   document.getElementById('msgInput').focus();
@@ -474,10 +486,10 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
   const msg = {
-    text, author: myName,
+    text: text.slice(0, 2000), author: String(myName).slice(0, 60),
     ts: firebase.database.ServerValue.TIMESTAMP
   };
-  db.ref('groups/' + activeGroupId + '/messages').push(msg);
+  db.ref('groups/' + activeGroupId + '/messages').push(msg).catch(() => toast('❌ Could not send — rejoin the group'));
   input.value = '';
   input.style.height = 'auto';
 }
@@ -543,12 +555,11 @@ function renderGroupList() {
   joinedGroups.forEach(gid => {
     const item = document.createElement('div');
     item.className = 'group-item' + (gid === activeGroupId ? ' active' : '');
-    item.innerHTML = `
-      <div class="group-avatar">${gid[0].toUpperCase()}</div>
-      <div>
-        <div class="group-name">#${gid}</div>
-        <div class="group-sub">Tap to open</div>
-      </div>`;
+    const av = document.createElement('div'); av.className = 'group-avatar'; av.textContent = gid[0].toUpperCase();
+    const col = document.createElement('div');
+    const nm = document.createElement('div'); nm.className = 'group-name'; nm.textContent = '#' + gid;
+    const sb = document.createElement('div'); sb.className = 'group-sub'; sb.textContent = 'Tap to open';
+    col.append(nm, sb); item.append(av, col);
     item.onclick = () => openChat(gid);
     list.appendChild(item);
   });

@@ -9,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
@@ -50,7 +51,7 @@
           <div class="row"><a class="pill" href="chat.html">Open group chat</a></div></div>
         <div class="call-box b-amber"><span class="ico">🔑</span><h3>A code</h3><p>Make a code and share it, or enter a code you were given.</p>
           <div class="row"><button class="pill voice" id="codeVoice" type="button">New voice code</button><button class="pill video" id="codeVideo" type="button">New video code</button></div>
-          <div class="row"><input id="codeInput" maxlength="7" placeholder="Enter code" autocomplete="off"><button class="pill primary" id="codeJoin" type="button">Join</button></div></div>
+          <div class="row"><input id="codeInput" maxlength="9" placeholder="Enter code" autocomplete="off"><button class="pill primary" id="codeJoin" type="button">Join</button></div></div>
       </div>
     </section>
 
@@ -75,6 +76,8 @@
       messagingSenderId: "1002255306494",
       appId: "1:1002255306494:web:6cca2ce180720b48615faf"
     });
+    // Anonymous sign-in: every read/write is tied to a signed-in session (see database.rules.json)
+    window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); return null; });
     window.db = firebase.database();
     window.storage = firebase.storage();
   </script>
@@ -99,6 +102,8 @@
     }
 
     async function init() {
+      await window.authReady;
+      if (!firebase.auth().currentUser) setStatus('error', 'Sign-in failed');
       try {
         const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json();
         userIP = d.ip.replace(/\./g, '_'); $('ipDisplay').textContent = d.ip;
@@ -153,9 +158,9 @@
 
     // calls: network (IP), code, group (on chat page)
     const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const pretty = c => c.slice(0, 3) + '-' + c.slice(3);
+    const pretty = c => c.slice(0, 4) + '-' + c.slice(4);
     function newCode(audioOnly) {
-      let c = ''; for (let i = 0; i < 6; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+      let c = ''; for (let i = 0; i < 8; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
       try { navigator.clipboard.writeText(pretty(c)); } catch (_) {}
       callUI.start('code~' + c, { audioOnly, title: 'Code ' + pretty(c), status: 'Share this code: ' + pretty(c) + ' (copied). Waiting for someone to join…' });
     }
@@ -165,7 +170,7 @@
     $('codeVideo').onclick = () => newCode(false);
     $('codeJoin').onclick = () => {
       const c = $('codeInput').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (c.length !== 6) return showToast('Enter the 6-character code');
+      if (c.length !== 8) return showToast('Enter the 8-character code');
       callUI.join('code~' + c, { title: 'Code ' + pretty(c) });
     };
     $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('codeJoin').click(); });

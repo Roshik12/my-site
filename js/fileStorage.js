@@ -11,6 +11,10 @@
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+  // Only trust Firebase Storage download links (blocks javascript:/data: URLs planted in the database)
+  function safeUrl(u) {
+    try { const x = new URL(u); return x.protocol === 'https:' && x.hostname === 'firebasestorage.googleapis.com' ? x.href : undefined; } catch (_) { return undefined; }
+  }
   const isImg = t => /^image\//.test(t || '');
   const grid = () => document.getElementById('filesGrid');
   const metaRef = () => window.db.ref('files/' + ip);
@@ -127,11 +131,11 @@
       const thumb = c.querySelector('.file-thumb');
       if (isImg(m.type)) {
         const img = document.createElement('img'); img.alt = m.name; img.loading = 'lazy'; thumb.appendChild(img);
-        if (m.url) img.src = m.url; else dataFor(m.id).then(d => { if (d) img.src = d; });
+        if (m.url) img.src = m.url; else dataFor(m.id).then(d => { if (d && /^data:image\/(png|jpe?g|gif|webp);base64,/.test(d)) img.src = d; });
       }
       c.querySelector('[data-a="dl"]').onclick = async () => {
         if (m.url) { window.open(m.url, '_blank', 'noopener'); return; }
-        const d = await dataFor(m.id); if (!d) return;
+        const d = await dataFor(m.id); if (!d || !/^data:[\w.+\/-]*;base64,/.test(d)) return;
         const a = document.createElement('a'); a.href = d; a.download = m.name; a.click();
       };
       const cp = c.querySelector('[data-a="cp"]');
@@ -148,7 +152,7 @@
     metaRef().on('value', snap => {
       const now = Date.now(), list = [];
       snap.forEach(ch => {
-        const m = Object.assign({ id: ch.key }, ch.val());
+        const m = Object.assign({ id: ch.key }, ch.val()); m.url = safeUrl(m.url);
         if (now - (m.created || 0) > WEEK) remove(m.id, m); else list.push(m);
       });
       items = list.sort((a, b) => b.created - a.created);
