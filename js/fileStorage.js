@@ -21,13 +21,11 @@
 
   function iconFor(m) {
     const n = (m.name || '').toLowerCase(), t = m.type || '';
-    if (t.startsWith('video/')) return '🎬';
-    if (t.startsWith('audio/')) return '🎵';
-    if (n.endsWith('.pdf')) return '📄';
-    if (/\.(zip|rar|7z|tar|gz)$/.test(n)) return '🗜️';
-    if (/\.(docx?|txt|md|rtf)$/.test(n)) return '📝';
-    if (/\.(xlsx?|csv)$/.test(n)) return '📊';
-    return '📦';
+    let k = 'file';
+    if (t.startsWith('video/')) k = 'film'; else if (t.startsWith('audio/')) k = 'music';
+    else if (n.endsWith('.pdf')) k = 'file-text'; else if (/\.(zip|rar|7z|tar|gz)$/.test(n)) k = 'archive';
+    else if (/\.(docx?|txt|md|rtf)$/.test(n)) k = 'file-text'; else if (/\.(xlsx?|csv)$/.test(n)) k = 'sheet';
+    return window.icon(k);
   }
 
   function kindFor(m) {
@@ -111,8 +109,8 @@
     g.innerHTML = '';
     pending.forEach(p => {
       const c = document.createElement('div'); c.className = 'file-card uploading';
-      c.innerHTML = `<div class="file-icon">⏳</div><div class="file-name">${esc(p.name)}</div>
-        <div class="file-progress"><span style="width:${p.pct.toFixed(0)}%"></span></div>
+      c.innerHTML = `<div class="file-icon">${window.icon('loader')}</div><div class="file-name">${esc(p.name)}</div>
+        <div class="file-progress" role="progressbar" aria-label="Uploading ${esc(p.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.pct.toFixed(0)}"><span style="width:${p.pct.toFixed(0)}%"></span></div>
         <div class="file-size">${p.pct.toFixed(0)}%</div>`;
       g.appendChild(c);
     });
@@ -124,9 +122,9 @@
         <div class="file-name" title="${esc(m.name)}">${esc(m.name)}</div>
         <div class="file-size">${fmt(m.size || 0)} · ${left}d left</div>
         <div class="file-actions">
-          <button class="btn" data-a="dl">⬇ Save</button>
-          ${m.url ? '<button class="btn" data-a="cp">🔗</button>' : ''}
-          <button class="btn" data-a="rm">🗑️</button>
+          <button class="btn" data-a="dl" aria-label="Save ${esc(m.name)}">${window.icon('download')}Save</button>
+          ${m.url ? `<button class="btn" data-a="cp" aria-label="Copy link to ${esc(m.name)}">${window.icon('link')}</button>` : ''}
+          <button class="btn" data-a="rm" aria-label="Delete ${esc(m.name)}">${window.icon('trash-2')}</button>
         </div>`;
       const thumb = c.querySelector('.file-thumb');
       if (isImg(m.type)) {
@@ -139,8 +137,8 @@
         const a = document.createElement('a'); a.href = d; a.download = m.name; a.click();
       };
       const cp = c.querySelector('[data-a="cp"]');
-      if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(m.url); window.showToast && showToast('✓ Link copied'); } catch (_) {} };
-      c.querySelector('[data-a="rm"]').onclick = async () => { if (confirm('Delete "' + m.name + '"?')) { try { await remove(m.id, m); } catch (e) { window.showToast && showToast('❌ Delete failed'); } } };
+      if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(m.url); window.showToast && showToast('Link copied'); } catch (_) {} };
+      c.querySelector('[data-a="rm"]').onclick = async () => { if (confirm('Delete "' + m.name + '"?')) { try { await remove(m.id, m); } catch (e) { window.showToast && showToast('Delete failed'); } } };
       g.appendChild(c);
     });
   }

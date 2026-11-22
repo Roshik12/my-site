@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy – QuickShare</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -78,15 +81,17 @@
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
+<script src="js/icons.js"></script>
+<a class="skip-link" href="#main">Skip to content</a>
     <nav>
     <div class="nav-left">
-      <a href="index.html" class="nav-logo"><img src="logo.svg" alt=""><span>QuickShare</span></a>
+      <a href="index.html" class="nav-logo" aria-label="QuickShare home"><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo-light.png" alt="" class="logo-mark"></picture><span>QuickShare</span></a>
       <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-chat">Chat</a><a href="about.html" class="">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="nav-active">Privacy</a></div>
     </div>
     <div class="nav-right"><span class="nav-badge">Free</span></div>
   </nav>
 
-  <div class="page-wrap">
+  <div class="page-wrap" id="main">
     <div class="page-label">Privacy Policy</div>
     <h1 class="page-title">Your data,<br>kept simple.</h1>
     <p class="page-sub">QuickShare is designed with minimal data collection. Here's everything we collect, why, and how long we keep it.</p>
@@ -94,22 +99,22 @@
 
     <div class="summary-grid">
       <div class="summary-card">
-        <span class="summary-icon">🙈</span>
+        <span class="summary-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-eye-off"/></svg></span>
         <h3>No accounts</h3>
         <p>We never ask for your name, email, or any personal account details.</p>
       </div>
       <div class="summary-card">
-        <span class="summary-icon">⏳</span>
+        <span class="summary-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-hourglass"/></svg></span>
         <h3>Auto-deleted</h3>
         <p>All text content is automatically purged 7 days after the last save.</p>
       </div>
       <div class="summary-card">
-        <span class="summary-icon">🚫</span>
+        <span class="summary-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-ban"/></svg></span>
         <h3>Not sold</h3>
         <p>We do not sell, rent, or share your data with third parties for advertising.</p>
       </div>
       <div class="summary-card">
-        <span class="summary-icon">📍</span>
+        <span class="summary-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-map-pin"/></svg></span>
         <h3>IP-keyed only</h3>
         <p>Your public IP is used as a session key — not stored as a user profile.</p>
       </div>

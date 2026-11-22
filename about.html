@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About – QuickShare</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,15 +66,17 @@
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
+<script src="js/icons.js"></script>
+<a class="skip-link" href="#main">Skip to content</a>
     <nav>
     <div class="nav-left">
-      <a href="index.html" class="nav-logo"><img src="logo.svg" alt=""><span>QuickShare</span></a>
+      <a href="index.html" class="nav-logo" aria-label="QuickShare home"><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo-light.png" alt="" class="logo-mark"></picture><span>QuickShare</span></a>
       <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-chat">Chat</a><a href="about.html" class="nav-active">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="">Privacy</a></div>
     </div>
     <div class="nav-right"><span class="nav-badge">Free</span></div>
   </nav>
 
-  <div class="page-wrap">
+  <div class="page-wrap" id="main">
     <div class="page-label">About</div>
     <h1 class="page-title">Built for the way<br>you actually work.</h1>
     <p class="page-sub">QuickShare exists because copy-pasting between devices should not require an account, an app install, or a subscription.</p>
@@ -101,22 +106,22 @@
 
     <div class="value-grid">
       <div class="value-card">
-        <span class="value-icon">🚀</span>
+        <span class="value-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-rocket"/></svg></span>
         <h3>Speed first</h3>
         <p>The fastest path between your thought and synced text. Every interaction is instant.</p>
       </div>
       <div class="value-card">
-        <span class="value-icon">🔓</span>
+        <span class="value-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-lock-open"/></svg></span>
         <h3>No gatekeeping</h3>
         <p>Free, forever. No premium tiers, no upsells, no "upgrade to access this feature."</p>
       </div>
       <div class="value-card">
-        <span class="value-icon">🧹</span>
+        <span class="value-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-eraser"/></svg></span>
         <h3>Auto-clean</h3>
         <p>Everything expires after 7 days. We don't hoard your data; we delete it on schedule.</p>
       </div>
       <div class="value-card">
-        <span class="value-icon">🎯</span>
+        <span class="value-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-target"/></svg></span>
         <h3>One thing well</h3>
         <p>QuickShare does one job: sync text. No document management, no collaboration bloat.</p>
       </div>

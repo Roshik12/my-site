@@ -197,3 +197,56 @@ body::before { display: block; content: ""; position: fixed; inset: 0; z-index: 
 .nav-links a.nav-chat { color: var(--c-violet); }
 .send-btn { background: linear-gradient(135deg, var(--c-blue), var(--c-violet)) !important; }
 #editor:focus, #editor:focus-visible { outline: none !important; box-shadow: none !important; }
+
+/* ===== UI/UX PRO MAX PASS: accessible contrast, SVG icons, touch targets ===== */
+:root { --accent: #0b63e5; --accent-glow: rgba(11,99,229,.14); --c-blue: #0b63e5; --c-violet: #7c3aed; --c-green: #047857; --c-red: #dc2626; --red: #dc2626; --placeholder: #6a6a73; }
+@media (prefers-color-scheme: dark) { :root { --accent: #1f6feb; --accent-glow: rgba(31,111,235,.22); --placeholder: #9a9aa4; --red: #f87171; } }
+::placeholder { color: var(--placeholder); opacity: 1; }
+:focus-visible { outline: 2px solid var(--accent2); outline-offset: 3px; border-radius: 6px; }
+.skip-link { position: absolute; left: 12px; top: -64px; z-index: 300; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: top .15s; }
+.skip-link:focus { top: 10px; }
+
+/* one icon family: Lucide stroke icons, sized by context */
+.ic { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -.2em; }
+.btn, .pill, .chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.btn .ic, .pill .ic, .chip .ic { width: 18px; height: 18px; }
+.chip.c-violet .ic { color: var(--c-violet); } .chip.c-green .ic { color: var(--c-green); }
+.icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.icon-btn .ic { width: 22px; height: 22px; }
+.send-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.send-btn .ic { width: 20px; height: 20px; }
+.call-box .ico .ic { color: var(--tone); }
+.file-icon .ic { width: 34px; height: 34px; color: var(--k, var(--accent)); }
+.cm-btn { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.cm-btn .ic { width: 24px; height: 24px; } .cm-avatar .ic { width: 44px; height: 44px; stroke: #fff; }
+.cm-ok { background: #15803d; } .cm-end { background: #dc2626; }
+.value-icon, .summary-icon { color: var(--accent); } .value-icon .ic, .summary-icon .ic { width: 26px; height: 26px; }
+.info-icon .ic { width: 18px; height: 18px; color: var(--accent); } .check .ic { width: 26px; height: 26px; }
+#welcomeScreen .ic { width: 48px; height: 48px; color: var(--text-muted); }
+.nav-logo { cursor: pointer; } .nav-logo picture { display: inline-flex; } .nav-logo img.logo-mark { height: 22px; width: auto; border-radius: 0; box-shadow: none; }
+
+/* touch: >=44px targets with >=8px gaps on touch devices */
+.composer-bar, .file-actions, .call-box .row, .chips { gap: 8px; }
+.tab-btn { min-height: 40px; cursor: pointer; }
+@media (pointer: coarse) { .pill, .chip, .btn, .tab-btn, .nav-links a { min-height: 44px; } .file-actions .btn { min-height: 44px; } }
+.pill:active, .btn:active, .chip:active { opacity: .85; }
+
+/* micro-interaction: messages ease in (respects reduced motion) */
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } }
+.msg { animation: msgIn .18s ease-out; }
+
+/* readable coloured text in both themes: fills stay dark enough for white text, text/icons use lighter tones on dark */
+:root { --t-blue: #0b63e5; --t-violet: #7c3aed; --t-green: #047857; --t-amber: #b45309; --t-pink: #be185d; }
+@media (prefers-color-scheme: dark) { :root { --t-blue: #7db8ff; --t-violet: #b69cff; --t-green: #4ade80; --t-amber: #fbbf24; --t-pink: #f472b6; } }
+.pill-blue { color: var(--t-blue); }
+.nav-links a.nav-chat { color: var(--t-violet); }
+.chip.c-violet .ic { color: var(--t-violet); } .chip.c-green .ic { color: var(--t-green); }
+.call-box.b-blue { --tone-t: var(--t-blue); } .call-box.b-violet { --tone-t: var(--t-violet); } .call-box.b-amber { --tone-t: var(--t-amber); }
+.call-box .ico .ic { color: var(--tone-t); }
+.grad { background-image: linear-gradient(100deg, var(--t-blue), var(--t-violet) 55%, var(--t-pink)); }
+.calls h2::before { background: var(--t-green); }
+.stat-item:nth-child(1) .stat-num { color: var(--t-blue); } .stat-item:nth-child(2) .stat-num { color: var(--t-violet); } .stat-item:nth-child(3) .stat-num { color: var(--t-pink); }
+.section-num { color: var(--t-violet); }
+.prose a, .info-icon .ic, .value-icon, .summary-icon { color: var(--t-blue); }
+.icon-btn { color: var(--t-blue); } .icon-btn:hover { background: var(--accent-glow); }
+.cm-btn:focus-visible, .icon-btn:focus-visible, .send-btn:focus-visible { border-radius: 50%; } .cm-info h2 { margin: 8px 0 0; font-size: 1.4rem; }

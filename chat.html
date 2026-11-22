@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat – QuickShare</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Firebase Compat SDK (worldwide accessible) -->
@@ -173,11 +176,12 @@
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
+<script src="js/icons.js"></script>
 
 <!-- NAV -->
 <nav>
     <div class="nav-left">
-      <a href="index.html" class="nav-logo"><img src="logo.svg" alt=""><span>QuickShare</span></a>
+      <a href="index.html" class="nav-logo" aria-label="QuickShare home"><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo-light.png" alt="" class="logo-mark"></picture><span>QuickShare</span></a>
       <div class="nav-links"><a href="index.html" class="">Home</a><a href="chat.html" class="nav-active">Chat</a><a href="about.html" class="">About</a><a href="contact.html" class="">Contact</a><a href="privacy.html" class="">Privacy</a></div>
     </div>
     <div class="nav-right"><div class="my-name-badge" id="nameBadge" onclick="openNameModal()" title="Click to change your name">
@@ -188,7 +192,7 @@
 
 <div id="nameModal" class="hidden">
   <div class="name-card">
-    <div style="font-size:36px;text-align:center;">👤</div>
+    <div style="font-size:36px;text-align:center;"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-user"/></svg></div>
     <h2 style="text-align:center;">Set your display name</h2>
     <p style="text-align:center;">This name will appear on all your messages. It's saved in your browser so you keep the same name every visit.</p>
     <input type="text" id="nameInput" placeholder="e.g. Alex, Dev01, Shadow…" maxlength="24" autocomplete="off">
@@ -202,7 +206,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-head">
-      <h2>💬 Group Chat</h2>
+      <h2><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-message-circle"/></svg> Group Chat</h2>
       <p>Create or join a group to start messaging.</p>
     </div>
 
@@ -235,7 +239,7 @@
           <label class="field-label">Set Password (optional)</label>
           <input type="password" id="createPw" placeholder="Blank = open group">
         </div>
-        <button class="btn btn-outline" onclick="createGroup()">Create Group ✦</button>
+        <button class="btn btn-outline" onclick="createGroup()">Create Group</button>
       </div>
     </div>
 
@@ -254,7 +258,7 @@
 
     <!-- Welcome screen -->
     <div class="welcome" id="welcomeScreen">
-      <div class="welcome-icon">🔐</div>
+      <div class="welcome-icon"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-lock"/></svg></div>
       <h2>Start a conversation</h2>
       <p>Create a new group or join an existing one with a Group ID. Messages are real-time and expire after 7 days.</p>
     </div>
@@ -262,28 +266,28 @@
     <!-- Active chat -->
     <div class="chat-view" id="chatView">
       <div class="chat-topbar">
-        <div class="chat-topbar-avatar" id="topbarAvatar">💬</div>
+        <div class="chat-topbar-avatar" id="topbarAvatar"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-message-circle"/></svg></div>
         <div class="chat-topbar-info">
           <h3 id="topbarName">Group</h3>
           <p id="topbarStatus">Connected · messages expire in 7 days</p>
         </div>
         <div class="chat-topbar-actions">
-          <button class="icon-btn" title="Voice call" onclick="startVoiceCall()">📞</button>
-          <button class="icon-btn" title="Video call" onclick="startVideoCall()">📹</button>
-          <button class="icon-btn" title="Copy Group ID" onclick="copyGroupId()">🔗</button>
-          <button class="icon-btn" title="Leave group" onclick="leaveGroup()">🚪</button>
+          <button aria-label="Voice call" class="icon-btn" title="Voice call" onclick="startVoiceCall()"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-phone"/></svg></button>
+          <button aria-label="Video call" class="icon-btn" title="Video call" onclick="startVideoCall()"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-video"/></svg></button>
+          <button aria-label="Copy Group ID" class="icon-btn" title="Copy Group ID" onclick="copyGroupId()"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-link"/></svg></button>
+          <button aria-label="Leave group" class="icon-btn" title="Leave group" onclick="leaveGroup()"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-log-out"/></svg></button>
         </div>
       </div>
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-inputbar">
         <textarea id="msgInput" placeholder="Type a message…" rows="1"></textarea>
-        <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
+        <button aria-label="Send" class="send-btn" onclick="sendMessage()" title="Send"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-send"/></svg></button>
       </div>
     </div>
   </div>
 </div>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <!-- FIREBASE + APP SCRIPT -->
 <script src="js/videocall.js"></script>
@@ -330,7 +334,7 @@ function saveName() {
   setCookie('qs_username', myName);
   document.getElementById('badgeNameText').textContent = myName;
   document.getElementById('nameModal').classList.add('hidden');
-  toast('✓ Name saved as "' + myName + '"');
+  toast('Name saved as "' + myName + '"');
 }
 
 document.getElementById('nameInput').addEventListener('keydown', e => {
@@ -352,7 +356,7 @@ let db, activeGroupId = null, msgListener = null;
 
 try {
   firebase.initializeApp(firebaseConfig);
-  window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); toast('❌ Sign-in failed — please reload'); return null; });
+  window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); toast('Sign-in failed — please reload'); return null; });
   db = firebase.database();
   window.db = db;
   db.ref('.info/connected').on('value', snap => {
@@ -362,7 +366,7 @@ try {
   });
 } catch(e) {
   console.error('Firebase init error:', e);
-  toast('❌ Firebase connection failed');
+  toast('Firebase connection failed');
 }
 
 // ── SAVE GROUPS to cookie + localStorage ──
@@ -391,36 +395,36 @@ async function pwHash(id, pw) {
 async function createGroup() {
   const id = document.getElementById('createId').value.trim().replace(/\s+/g, '-').toLowerCase();
   const pw = document.getElementById('createPw').value;
-  if (!id) return toast('❌ Enter a group ID');
-  if (!/^[a-z0-9\-_]{2,30}$/.test(id)) return toast('❌ ID: lowercase letters, numbers, dashes only');
+  if (!id) return toast('Enter a group ID');
+  if (!/^[a-z0-9\-_]{2,30}$/.test(id)) return toast('ID: lowercase letters, numbers, dashes only');
   try {
     await window.authReady;
     const uid = firebase.auth().currentUser.uid, h = await pwHash(id, pw);
     try { await db.ref('groups/' + id + '/meta/pwHash').set(h); }
-    catch (e) { return toast('❌ Group ID already taken — try another'); }
+    catch (e) { return toast('Group ID already taken — try another'); }
     await db.ref('groups/' + id + '/members/' + uid).set(h);
-    toast('✓ Group created!');
+    toast('Group created!');
     document.getElementById('createId').value = '';
     document.getElementById('createPw').value = '';
     openChat(id);
-  } catch (e) { toast('❌ Could not create group'); }
+  } catch (e) { toast('Could not create group'); }
 }
 
 // ── JOIN GROUP ──
 async function joinGroup() {
   const id = document.getElementById('joinId').value.trim().toLowerCase();
   const pw = document.getElementById('joinPw').value;
-  if (!id) return toast('❌ Enter a group ID');
+  if (!id) return toast('Enter a group ID');
   try {
     await window.authReady;
     const uid = firebase.auth().currentUser.uid, h = await pwHash(id, pw);
     try { await db.ref('groups/' + id + '/members/' + uid).set(h); }
-    catch (e) { return toast('❌ Wrong group ID or password'); }
-    toast('✓ Joined ' + id);
+    catch (e) { return toast('Wrong group ID or password'); }
+    toast('Joined ' + id);
     document.getElementById('joinId').value = '';
     document.getElementById('joinPw').value = '';
     openChat(id);
-  } catch (e) { toast('❌ Could not join group'); }
+  } catch (e) { toast('Could not join group'); }
 }
 
 // ── OPEN CHAT ──
@@ -473,7 +477,7 @@ async function openChat(groupId) {
       renderMessage(msg);
     }, err => {
       addSystemMsg('Access denied — rejoin this group with its password.');
-      toast('❌ Rejoin the group with its password');
+      toast('Rejoin the group with its password');
     });
 
   document.getElementById('msgInput').focus();
@@ -489,7 +493,7 @@ function sendMessage() {
     text: text.slice(0, 2000), author: String(myName).slice(0, 60),
     ts: firebase.database.ServerValue.TIMESTAMP
   };
-  db.ref('groups/' + activeGroupId + '/messages').push(msg).catch(() => toast('❌ Could not send — rejoin the group'));
+  db.ref('groups/' + activeGroupId + '/messages').push(msg).catch(() => toast('Could not send — rejoin the group'));
   input.value = '';
   input.style.height = 'auto';
 }
@@ -541,7 +545,7 @@ function leaveGroup() {
 
 function copyGroupId() {
   if (!activeGroupId) return;
-  navigator.clipboard.writeText(activeGroupId).then(() => toast('✓ Group ID copied'));
+  navigator.clipboard.writeText(activeGroupId).then(() => toast('Group ID copied'));
 }
 
 // ── SIDEBAR GROUP LIST ──
