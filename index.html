@@ -186,6 +186,14 @@
       dbRef = window.db.ref('saves/' + userIP);
       setStatus('saving', 'Loading…');
       let first = true;
+      // watchdog: if the database never answers (some Safari tabs stall), reconnect a few times, then say so
+      let tries = 0;
+      const watchdog = setInterval(() => {
+        if (!first) return clearInterval(watchdog);
+        if (++tries > 3) { clearInterval(watchdog); setStatus('error', 'Cannot reach database'); return notice('Could not connect:', 'Reload this tab, turn off content blockers, or use a sync code.'); }
+        setStatus('saving', 'Reconnecting…');
+        try { window.db.goOffline(); setTimeout(() => window.db.goOnline(), 300); } catch (_) {}
+      }, 8000);
       // live: fires on load and whenever any device on this network edits the note
       dbRef.on('value', snap => {
         const d = snap.val();
