@@ -117,6 +117,7 @@
     let userIP = 'guest', dbRef = null, saveTimer = null, dirty = false;
     const CLIENT = localStorage.getItem('qs_client_id') || (() => { const v = 'c_' + Math.random().toString(36).slice(2, 10); localStorage.setItem('qs_client_id', v); return v; })();
     window.QS_CLIENT_ID = CLIENT;
+    const TAB = 'tab_' + Math.random().toString(36).slice(2, 10); // unique per tab, so tabs sync with each other
 
     function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(showToast.t); showToast.t = setTimeout(() => t.classList.remove('show'), 2400); }
     function setStatus(state, msg) { $('statusDot').className = 'status-dot ' + state; $('statusText').textContent = msg; }
@@ -189,7 +190,7 @@
         if (d && d.timestamp && Date.now() - d.timestamp > WEEK) { dbRef.remove(); return; }
         if (first) { first = false; setStatus('synced', 'Ready'); }
         const text = d ? (d.text || '') : '';
-        const mine = d && d.by === CLIENT;
+        const mine = d && d.by === TAB;
         if (d) $('expiryLabel').textContent = 'Expires ' + new Date((d.timestamp || Date.now()) + WEEK).toLocaleDateString();
         if (mine || dirty || text === editor.value) return;
         const s0 = editor.selectionStart, s1 = editor.selectionEnd, focused = document.activeElement === editor;
@@ -202,7 +203,7 @@
     function pulse() { const c = $('composer'); c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); }
     editor.addEventListener('input', () => {
       stats(); dirty = true; setStatus('saving', 'Saving…'); clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => dbRef && dbRef.set({ text: editor.value, timestamp: Date.now(), by: CLIENT })
+      saveTimer = setTimeout(() => dbRef && dbRef.set({ text: editor.value, timestamp: Date.now(), by: TAB })
         .then(() => { dirty = false; setStatus('synced', 'Saved'); }).catch(e => { setStatus('error', 'Save failed'); notice('Could not save:', humanError(e)); }), 350);
     });
     $('copyBtn').onclick = async () => { if (!editor.value) return; try { await navigator.clipboard.writeText(editor.value); showToast('Copied'); } catch { showToast('Copy failed'); } };
