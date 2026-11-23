@@ -300,3 +300,69 @@ body::before { display: block; content: ""; position: fixed; inset: 0; z-index: 
 .ad-slot ins.adsbygoogle { display: block; min-height: 100px; }
 .ad-slot[data-ad="chat-sidebar"] { margin: 12px 0 0; padding: 12px; border-top: 1px solid var(--border); max-width: none; }
 @media (max-width: 860px) { .ad-slot[data-ad="chat-sidebar"] { display: none !important; } }
+
+/* ===== UNSLOP PASS (delete from here to the end to roll back) =====
+   Direction: calm, plain, quick. Quiet neutral chrome, one accent (Attach, selection, own chat bubbles).
+   Signature: the live sync dot. Based on the unslop skill by Damir Sokolovsky (@heydamir), CC BY 4.0. */
+body::before { display: none; }
+.grad { background: none !important; -webkit-text-fill-color: currentColor !important; color: inherit; font-style: normal; }
+.composer { border: 1px solid var(--border); background: var(--surface2); box-shadow: none; }
+.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--accent-glow); } 100% { box-shadow: 0 0 0 12px transparent; } }
+.pill-blue { background: var(--accent); color: #fff; border-color: transparent; font-weight: 500; }
+.pill-blue:hover { background: var(--accent); filter: brightness(1.08); }
+.status-dot.synced { box-shadow: none; }
+.chip.c-violet, .chip.c-green { background: var(--surface); border-color: var(--border); }
+.chip.c-violet .ic, .chip.c-green .ic { color: var(--text-muted); }
+.call-box, .call-box.b-blue, .call-box.b-violet, .call-box.b-amber { border-top: 1px solid var(--border); background: var(--surface); }
+.call-box .ico { background: var(--surface2); }
+.call-box .ico .ic { color: var(--text-muted); }
+.pill.voice, .pill.video, .call-box.b-violet .pill { background: var(--bg); color: var(--text); border-color: var(--border); }
+.pill.voice:hover, .pill.video:hover, .call-box.b-violet .pill:hover { background: var(--surface); border-color: var(--border-hover); filter: none; }
+.call-box.b-amber .pill.primary { background: var(--text); color: var(--bg); }
+.file-card[data-kind] .file-thumb { background: var(--surface2); }
+.file-icon .ic { color: var(--text-muted); }
+.calls h2::before, .files h2::before { display: none; }
+.value-card, .summary-card:nth-child(n) { border-top: 1px solid var(--border); }
+.stat-item:nth-child(n) .stat-num, .section-num { color: var(--text); }
+.nav-links a.nav-chat { color: var(--text); font-weight: 500; }
+.nav-links a.nav-chat:hover { background: var(--surface2); }
+.msg.own .msg-bubble { background: var(--accent) !important; }
+.send-btn { background: var(--accent) !important; }
+.group-avatar, .chat-topbar-avatar { background: var(--surface2) !important; color: var(--text) !important; }
+.cm-avatar { background: #2a2a2e; }
+.icon-btn { color: var(--text-muted); }
+.icon-btn:hover { color: var(--text); background: var(--surface2); }
+/* ===== END UNSLOP PASS ===== */
+
+/* ===== COOL PASS (delete from here to the end to roll back) ===== */
+body::before { display: block; background-image: radial-gradient(color-mix(in srgb, var(--text) 16%, transparent) 1px, transparent 1.2px); background-size: 24px 24px; -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 22%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 55% at 50% 22%, #000, transparent 75%); }
+.hero-art { max-width: 460px; margin: 0 auto 8px; color: var(--text-muted); }
+.hero-art svg { width: 100%; height: auto; display: block; }
+.hero-art .dev rect, .hero-art .dev path { stroke: currentColor; stroke-width: 1.6; fill: var(--bg); stroke-linecap: round; }
+.hero-art .dev path { fill: none; }
+.hero-art .dev circle { fill: currentColor; }
+.hero-art .note rect { stroke: var(--accent); fill: var(--accent-glow); }
+.hero-art .note path { stroke: var(--accent); }
+.hero-art .flow { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 4 7; opacity: .7; animation: flow 1.2s linear infinite; }
+.hero-art .pk { fill: var(--accent); }
+@keyframes flow { to { stroke-dashoffset: -22; } }
+.greet { font-size: clamp(2.4rem, 6.4vw, 3.8rem); letter-spacing: -.03em; }
+.grad { color: var(--accent) !important; -webkit-text-fill-color: var(--accent) !important; font-style: italic; position: relative; }
+.grad::after { content: ''; position: absolute; left: 0; right: 0; bottom: .02em; height: 3px; border-radius: 2px; background: var(--accent); opacity: .35; }
+.composer { border-radius: 24px; padding: 20px 20px 12px; background: var(--surface); box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent) inset, 0 24px 48px -24px rgba(0,0,0,.28); }
+.composer:focus-within { box-shadow: 0 0 0 3px var(--accent-glow), 0 28px 56px -24px color-mix(in srgb, var(--accent) 45%, transparent); }
+.chip, .call-box, .file-card { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.chip:hover, .call-box:hover, .file-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); box-shadow: 0 14px 28px -16px rgba(0,0,0,.35); }
+.call-box .ico { background: var(--accent-glow); } .call-box .ico .ic { color: var(--t-blue); }
+.chip .ic { color: var(--t-blue) !important; }
+.pill.video { background: var(--accent); color: #fff; border-color: transparent; } .pill.video:hover { background: var(--accent); filter: brightness(1.1); }
+.calls h2::before, .files h2::before { display: block; width: 4px; height: 22px; border-radius: 2px; background: var(--accent); }
+.nav-links a.nav-chat { color: var(--t-blue); }
+.msg.own .msg-bubble { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000)) !important; }
+/* ===== END COOL PASS ===== */
+
+/* group call grid (2-6 people) */
+.cm-grid { position: absolute; inset: 0; display: grid; gap: 4px; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); grid-auto-rows: 1fr; background: #0b0b0d; }
+.cm-grid video { width: 100%; height: 100%; min-height: 0; object-fit: cover; background: #16161a; }
+.cm.audio .cm-grid { opacity: 0; pointer-events: none; }

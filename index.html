@@ -30,7 +30,16 @@
   </nav>
 
   <main class="stage" id="main">
-    <h1 class="greet">What are you <span class="grad">sharing</span> today?</h1>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 520 150" fill="none">
+        <path class="flow" d="M118 78 C170 20 210 20 260 62 S350 120 402 70" />
+        <g class="dev"><rect x="40" y="46" width="78" height="52" rx="7"/><rect x="30" y="98" width="98" height="7" rx="3.5"/></g>
+        <g class="dev note"><rect x="222" y="34" width="76" height="62" rx="10"/><path d="M238 54h44M238 68h44M238 82h26"/></g>
+        <g class="dev"><rect x="402" y="34" width="38" height="70" rx="8"/><circle cx="421" cy="94" r="2.5"/></g>
+        <circle class="pk" r="4"><animateMotion dur="3.6s" repeatCount="indefinite" path="M118 78 C170 20 210 20 260 62 S350 120 402 70"/></circle>
+      </svg>
+    </div>
+    <h1 class="greet">Share notes and files across <span class="grad">your devices</span></h1>
     <div class="composer" id="composer">
       <textarea id="editor" rows="4" placeholder="Write a note. It saves on its own and appears on every device on your network."></textarea>
       <div class="composer-bar">
@@ -92,6 +101,7 @@
     window.db = firebase.database();
     window.storage = firebase.storage();
   </script>
+  <script src="js/supabase-config.js"></script>
   <script src="js/fileStorage.js"></script>
   <script src="js/videocall.js"></script>
   <script src="js/callui.js"></script>
@@ -154,7 +164,8 @@
     // files: attach button, drop anywhere, paste
     function handleFiles(files) {
       Array.from(files).forEach(f => {
-        if (f.size > 50 * 1024 * 1024) return showToast('File is over 50MB');
+        const maxMB = (window.SUPABASE && window.SUPABASE.url && window.SUPABASE.maxMB) || 50;
+        if (f.size > maxMB * 1024 * 1024) return showToast('File is over ' + maxMB + 'MB');
         window.fileStorage.uploadFile(f).then(() => showToast('Uploaded ' + f.name)).catch(e => showToast(e.message || 'Upload failed'));
       });
     }
