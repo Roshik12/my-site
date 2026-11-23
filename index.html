@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="color-scheme" content="light dark">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js" crossorigin="anonymous"></script>
@@ -51,12 +51,18 @@
         <span class="save-state"><i class="status-dot" id="statusDot"></i><span id="statusText">Connecting…</span></span>
       </div>
     </div>
+    <div class="notice" id="notice" role="alert" hidden><div><strong id="noticeTitle"></strong> <span id="noticeText"></span></div><button class="notice-x" id="noticeX" type="button" aria-label="Dismiss">×</button></div>
     <input type="file" id="fileInput" multiple hidden>
     <div class="chips">
       <a class="chip c-violet" href="chat.html"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-message-circle"/></svg> Open group chat</a>
       <a class="chip c-green" href="#calls"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-phone"/></svg> Start a call</a>
     </div>
-    <p class="meta">Your network <b id="ipDisplay">…</b> · <span id="expiryLabel">Saved for 7 days</span> · <b id="charCount">0</b> characters, <b id="wordCount">0</b> words</p>
+    <p class="meta"><span id="syncLabel">Your network</span> <b id="ipDisplay">…</b> · <button class="linkbtn" id="syncChange" type="button" aria-expanded="false" aria-controls="syncPop">Use a code instead</button> · <span id="expiryLabel">Saved for 7 days</span> · <b id="charCount">0</b> characters, <b id="wordCount">0</b> words</p>
+    <div class="sync-pop" id="syncPop" hidden>
+      <p>Devices on the <b>same Wi-Fi</b> sync automatically. On <b>different networks</b> (Wi-Fi and mobile data), use the same code on both devices. Notes, files and network calls then follow the code.</p>
+      <div class="row"><input id="syncInput" maxlength="9" placeholder="Enter code" autocomplete="off" aria-label="Sync code"><button class="pill primary" id="syncUse" type="button">Use code</button><button class="pill" id="syncNew" type="button">New code</button></div>
+      <button class="linkbtn" id="syncOff" type="button" hidden>Go back to network sync</button>
+    </div>
 
         <section class="calls" id="calls">
       <h2>Calls</h2>
@@ -97,7 +103,7 @@
       appId: "1:1002255306494:web:6cca2ce180720b48615faf"
     });
     // Anonymous sign-in: every read/write is tied to a signed-in session (see database.rules.json)
-    window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); return null; });
+    window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); window.authErr = e; return null; });
     window.db = firebase.database();
     window.storage = firebase.storage();
   </script>
@@ -122,16 +128,58 @@
       autosize();
     }
 
+    // ---- who am I syncing with? a typed code (works across networks) or the public IP (same Wi-Fi) ----
+    const SYNC_KEY = 'qs_sync_code';
+    const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const prettyCode = c => c.slice(0, 4) + '-' + c.slice(4);
+    const getCode = () => { let c = ''; try { c = normCode(localStorage.getItem(SYNC_KEY)); } catch (_) {} return c.length >= 6 ? c : ''; };
+    async function timedFetch(url, ms) { const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms); try { return await fetch(url, { signal: ac.signal, cache: 'no-store' }); } finally { clearTimeout(t); } }
+    async function detectIP() {
+      const tries = [
+        async () => (await (await timedFetch('https://api.ipify.org?format=json', 4000)).json()).ip,
+        async () => (await (await timedFetch('https://ipv4.icanhazip.com', 4000)).text()).trim()
+      ];
+      for (const t of tries) { try { const ip = await t(); if (/^[0-9a-fA-F:.]{3,45}$/.test(ip || '')) return ip; } catch (_) {} }
+      return null;
+    }
+    function humanError(e) {
+      const m = (e && (e.code || e.message)) || String(e);
+      if (/PERMISSION_DENIED|permission/i.test(m)) return 'Blocked by Firebase rules. Turn on Anonymous sign-in and publish database.rules.json (see SECURITY.md).';
+      if (/operation-not-allowed/i.test(m)) return 'Anonymous sign-in is turned off in Firebase (Authentication, Sign-in method).';
+      if (/network|offline|timeout|abort/i.test(m)) return 'Network problem. Check your connection and try again.';
+      return (e && e.message) || 'Something went wrong';
+    }
+    function notice(title, text) { $('noticeTitle').textContent = title; $('noticeText').textContent = text; $('notice').hidden = false; }
+    $('noticeX').onclick = () => { $('notice').hidden = true; };
+
+    // quick self-check so a misconfigured Firebase shows a clear message instead of failing silently
+    async function selfCheck() {
+      if (!firebase.auth().currentUser) {
+        const code = window.authErr && window.authErr.code;
+        return notice('Sign-in problem:', code === 'auth/operation-not-allowed' ? 'Anonymous sign-in is turned off. Firebase, Authentication, Sign-in method, enable Anonymous, then reload.' : 'Could not sign in (' + (code || 'unknown') + '). Reload, or check Firebase Authentication.');
+      }
+      const id = '_diag' + Date.now().toString(36), bad = [];
+      try { await window.db.ref('files/' + userIP + '/' + id).set({ name: 'diag', size: 0, created: Date.now() }); await window.db.ref('files/' + userIP + '/' + id).remove(); } catch (e) { bad.push('file list'); }
+      try { await window.db.ref('filedata/' + userIP + '/' + id + '/0').set('x'); await window.db.ref('filedata/' + userIP + '/' + id).remove(); } catch (e) { bad.push('file storage'); }
+      if (bad.length) notice('Setup needed:', 'Firebase is blocking ' + bad.join(' and ') + '. Publish the latest database.rules.json in Realtime Database, Rules.');
+    }
+
     async function init() {
       await window.authReady;
       if (!firebase.auth().currentUser) setStatus('error', 'Sign-in failed');
-      try {
-        const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json();
-        userIP = d.ip.replace(/\./g, '_'); $('ipDisplay').textContent = d.ip;
-      } catch (e) { userIP = 'guest_' + Math.random().toString(36).slice(2, 8); $('ipDisplay').textContent = 'guest session'; }
+      const code = getCode();
+      if (code) {
+        userIP = 'c_' + code; $('syncLabel').textContent = 'Synced by code'; $('ipDisplay').textContent = prettyCode(code);
+        $('syncChange').textContent = 'Change code'; $('syncOff').hidden = false;
+      } else {
+        const ip = await detectIP();
+        if (ip) { userIP = ip.replace(/[.]/g, '_'); $('ipDisplay').textContent = ip; }
+        else { userIP = 'dev_' + CLIENT.replace(/[^A-Za-z0-9_]/g, ''); $('syncLabel').textContent = 'Could not detect your network:'; $('ipDisplay').textContent = 'use a code to sync devices'; }
+      }
       window.userIP = userIP;
       window.fileStorage.init(userIP);
       callUI.watch('ip~' + userIP, 'Your network');
+      selfCheck();
       dbRef = window.db.ref('saves/' + userIP);
       setStatus('saving', 'Loading…');
       let first = true;
@@ -148,14 +196,14 @@
         editor.value = text; stats();
         if (focused) editor.setSelectionRange(Math.min(s0, text.length), Math.min(s1, text.length));
         setStatus('synced', 'Updated from another device'); pulse();
-      }, () => setStatus('error', 'Could not load'));
+      }, e => { setStatus('error', 'Could not load'); notice('Could not load:', humanError(e)); });
     }
 
     function pulse() { const c = $('composer'); c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); }
     editor.addEventListener('input', () => {
       stats(); dirty = true; setStatus('saving', 'Saving…'); clearTimeout(saveTimer);
       saveTimer = setTimeout(() => dbRef && dbRef.set({ text: editor.value, timestamp: Date.now(), by: CLIENT })
-        .then(() => { dirty = false; setStatus('synced', 'Saved'); }).catch(() => setStatus('error', 'Save failed')), 350);
+        .then(() => { dirty = false; setStatus('synced', 'Saved'); }).catch(e => { setStatus('error', 'Save failed'); notice('Could not save:', humanError(e)); }), 350);
     });
     $('copyBtn').onclick = async () => { if (!editor.value) return; try { await navigator.clipboard.writeText(editor.value); showToast('Copied'); } catch { showToast('Copy failed'); } };
     $('clearBtn').onclick = () => { if (editor.value && confirm('Clear this note?')) { editor.value = ''; stats(); dirty = false; dbRef && dbRef.remove(); setStatus('synced', 'Cleared'); } };
@@ -166,7 +214,7 @@
       Array.from(files).forEach(f => {
         const maxMB = (window.SUPABASE && window.SUPABASE.url && window.SUPABASE.maxMB) || 50;
         if (f.size > maxMB * 1024 * 1024) return showToast('File is over ' + maxMB + 'MB');
-        window.fileStorage.uploadFile(f).then(() => showToast('Uploaded ' + f.name)).catch(e => showToast(e.message || 'Upload failed'));
+        window.fileStorage.uploadFile(f).then(() => showToast('Uploaded ' + f.name)).catch(e => showToast(humanError(e)));
       });
     }
     $('attachBtn').onclick = () => $('fileInput').click();
@@ -196,6 +244,17 @@
       callUI.join('code~' + c, { title: 'Code ' + pretty(c) });
     };
     $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('codeJoin').click(); });
+    // sync code popover (works across different networks / mobile data)
+    function setCode(c) { try { if (c) localStorage.setItem(SYNC_KEY, c); else localStorage.removeItem(SYNC_KEY); } catch (_) {} location.reload(); }
+    $('syncChange').onclick = () => { const p = $('syncPop'); p.hidden = !p.hidden; $('syncChange').setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) $('syncInput').focus(); };
+    $('syncUse').onclick = () => { const c = normCode($('syncInput').value); if (c.length < 6) return showToast('Enter a code with at least 6 letters or numbers'); setCode(c); };
+    $('syncNew').onclick = () => {
+      let c = ''; for (let i = 0; i < 8; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+      try { navigator.clipboard.writeText(prettyCode(c)); } catch (_) {}
+      showToast('Code ' + prettyCode(c) + ' copied. Enter it on your other device.'); setTimeout(() => setCode(c), 1200);
+    };
+    $('syncInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('syncUse').click(); });
+    $('syncOff').onclick = () => setCode('');
     init();
   </script>
 <script src="js/theme.js"></script>

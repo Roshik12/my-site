@@ -9,16 +9,22 @@
   var MODES = [{ id: 'system', name: 'System', icon: 'monitor' }, { id: 'light', name: 'Light', icon: 'sun' }, { id: 'dark', name: 'Dark', icon: 'moon' }];
   var get = function (k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
   var put = function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} };
-  var mode = get('qs_theme', 'system'), acc = get('qs_accent', 'blue');
+  var STYLES = [{ id: 'clean', name: 'Clean', icon: 'layout-grid' }, { id: 'neon', name: 'Neon', icon: 'sparkles' }];
+  var mode = get('qs_theme', 'system'), acc = get('qs_accent', 'blue'), style = get('qs_style', 'clean');
+  if (style !== 'neon') style = 'clean';
   if (!MODES.some(function (m) { return m.id === mode; })) mode = 'system';
   if (!ACC.some(function (a) { return a.id === acc; })) acc = 'blue';
   var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  var effective = function () { return mode === 'system' ? (mq.matches ? 'dark' : 'light') : mode; };
+  var effective = function () { return style === 'neon' ? 'dark' : mode === 'system' ? (mq.matches ? 'dark' : 'light') : mode; };
   var btn, pop;
 
   function apply() {
-    if (mode === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', mode);
-    if (acc === 'blue') root.removeAttribute('data-accent'); else root.setAttribute('data-accent', acc);
+    if (style === 'neon') { root.setAttribute('data-style', 'neon'); root.setAttribute('data-theme', 'dark'); root.removeAttribute('data-accent'); }
+    else {
+      root.removeAttribute('data-style');
+      if (mode === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', mode);
+      if (acc === 'blue') root.removeAttribute('data-accent'); else root.setAttribute('data-accent', acc);
+    }
     var icons = document.querySelectorAll('link[rel="icon"]');
     for (var i = 1; i < icons.length; i++) icons[i].remove();
     if (icons[0]) { icons[0].removeAttribute('media'); icons[0].href = effective() === 'dark' ? 'favicon-dark.png' : 'favicon.png'; }
@@ -35,15 +41,18 @@
     pop.id = 'themePop'; pop.className = 'theme-pop'; pop.hidden = true;
     pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Appearance');
     pop.innerHTML =
-      '<div class="grp"><h2 id="tpMode">Mode</h2><div class="seg" role="radiogroup" aria-labelledby="tpMode">' +
+      '<div class="grp"><h2 id="tpStyle">Style</h2><div class="seg seg2" role="radiogroup" aria-labelledby="tpStyle">' +
+      STYLES.map(function (x) { return '<button type="button" role="radio" data-style="' + x.id + '" aria-checked="false">' + window.icon(x.icon) + x.name + '</button>'; }).join('') +
+      '</div></div><div class="grp" data-grp="mode"><h2 id="tpMode">Mode</h2><div class="seg" role="radiogroup" aria-labelledby="tpMode">' +
       MODES.map(function (m) { return '<button type="button" role="radio" data-mode="' + m.id + '" aria-checked="false">' + window.icon(m.icon) + m.name + '</button>'; }).join('') +
-      '</div></div><div class="grp"><h2 id="tpColor">Color theme</h2><div class="swatches" role="radiogroup" aria-labelledby="tpColor">' +
+      '</div></div><div class="grp" data-grp="color"><h2 id="tpColor">Color theme</h2><div class="swatches" role="radiogroup" aria-labelledby="tpColor">' +
       ACC.map(function (a) { return '<button type="button" class="swatch" role="radio" data-acc="' + a.id + '" aria-label="' + a.name + '" title="' + a.name + '" aria-checked="false" style="--p:' + a.p + ';--s:' + a.s + '">' + window.icon('check') + '</button>'; }).join('') +
       '</div><div class="swatch-name" aria-live="polite"></div></div>';
     host.insertBefore(btn, host.firstChild); host.appendChild(pop);
     btn.addEventListener('click', function () { pop.hidden ? open() : close(true); });
     pop.addEventListener('click', function (e) {
-      var m = e.target.closest('[data-mode]'), a = e.target.closest('[data-acc]');
+      var m = e.target.closest('[data-mode]'), a = e.target.closest('[data-acc]'), st = e.target.closest('[data-style]');
+      if (st) { style = st.getAttribute('data-style'); put('qs_style', style); apply(); sync(); return; }
       if (m) { mode = m.getAttribute('data-mode'); put('qs_theme', mode); }
       if (a) { acc = a.getAttribute('data-acc'); put('qs_accent', acc); }
       if (m || a) { apply(); sync(); }
@@ -54,6 +63,8 @@
     sync(); apply();
   }
   function sync() {
+    pop.querySelectorAll('[data-style]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-style') === style)); });
+    pop.querySelectorAll('[data-grp]').forEach(function (g) { g.hidden = style === 'neon'; });
     pop.querySelectorAll('[data-mode]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-mode') === mode)); });
     pop.querySelectorAll('[data-acc]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-acc') === acc)); });
     var cur = ACC.filter(function (a) { return a.id === acc; })[0];

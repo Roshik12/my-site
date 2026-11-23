@@ -200,6 +200,7 @@
     metaRef().on('value', snap => {
       const now = Date.now(), list = [];
       snap.forEach(ch => {
+        if (String(ch.key).startsWith('_diag')) return;
         const m = Object.assign({ id: ch.key }, ch.val()); m.url = safeUrl(m.url);
         if (now - (m.created || 0) > WEEK) remove(m.id, m); else list.push(m);
       });
