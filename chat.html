@@ -360,6 +360,8 @@ let db, activeGroupId = null, msgListener = null;
 try {
   firebase.initializeApp(firebaseConfig);
   window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); toast('Sign-in failed — please reload'); return null; });
+  // Safari sometimes never completes the websocket; long-polling is slower but always connects
+  try { if (/safari/i.test(navigator.userAgent) && !/chrome|chromium|crios|fxios|android/i.test(navigator.userAgent)) firebase.database.INTERNAL.forceLongPolling(); } catch (_) {}
   db = firebase.database();
   window.db = db;
   db.ref('.info/connected').on('value', snap => {
