@@ -17,23 +17,7 @@
   const fmt = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
   // Only trust Firebase Storage download links (blocks javascript:/data: URLs planted in the database)
   function safeUrl(u) {
-    try { const x = new URL(u); const sb = window.SUPABASE && window.SUPABASE.url ? new URL(window.SUPABASE.url).hostname : null;
-      return x.protocol === 'https:' && (x.hostname === 'firebasestorage.googleapis.com' || (sb && x.hostname === sb)) ? x.href : undefined; } catch (_) { return undefined; }
-  }
-  const SB = () => (window.SUPABASE && window.SUPABASE.url && window.SUPABASE.anonKey) ? window.SUPABASE : null;
-  let sbDown = false;
-  function sbUpload(file, path, onPct) {
-    const c = SB();
-    return new Promise((res, rej) => {
-      const x = new XMLHttpRequest();
-      x.open('POST', `${c.url}/storage/v1/object/${c.bucket}/${path}`);
-      x.setRequestHeader('apikey', c.anonKey); x.setRequestHeader('Authorization', 'Bearer ' + c.anonKey);
-      x.setRequestHeader('Content-Type', file.type || 'application/octet-stream'); x.setRequestHeader('x-upsert', 'false');
-      x.upload.onprogress = e => e.lengthComputable && onPct(e.loaded / e.total * 100);
-      x.onload = () => x.status < 300 ? res(`${c.url}/storage/v1/object/public/${c.bucket}/${path}`) : rej(new Error('Supabase ' + x.status));
-      x.onerror = () => rej(new Error('Supabase network error'));
-      x.send(file);
-    });
+    try { const x = new URL(u); return x.protocol === 'https:' && x.hostname === 'firebasestorage.googleapis.com' ? x.href : undefined; } catch (_) { return undefined; }
   }
   const isImg = t => /^image\//.test(t || '');
   const grid = () => document.getElementById('filesGrid');
@@ -87,14 +71,7 @@
 
     try {
       let stored = false, storageErr = null;
-      if (SB() && !sbDown) {
-        try {
-          const tok = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
-          const path = `${tok}/${id}_${safe}`;
-          meta.url = await sbUpload(file, path, progress); meta.path = path; stored = true;
-        } catch (err) { sbDown = true; console.warn('Supabase upload failed, trying Firebase Storage:', err); }
-      }
-      if (!stored && window.storage && !storageDown) {
+      if (window.storage && !storageDown) {
         try {
           const ref = window.storage.ref(`files/${ip}/${id}_${safe}`);
           const task = ref.put(file, { contentType: file.type || 'application/octet-stream' });
@@ -126,10 +103,7 @@
   }
 
   async function remove(id, m) {
-    try {
-      if (SB() && m.url && m.url.startsWith(SB().url + '/storage/')) { const c = SB(); await fetch(`${c.url}/storage/v1/object/${c.bucket}/${m.path}`, { method: 'DELETE', headers: { apikey: c.anonKey, Authorization: 'Bearer ' + c.anonKey } }); }
-      else if (m.path && window.storage) await window.storage.ref(m.path).delete();
-    } catch (_) {}
+    try { if (m.path && window.storage) await window.storage.ref(m.path).delete(); } catch (_) {}
     try { if (m.inline) await window.db.ref(`filedata/${ip}/${id}`).remove(); } catch (_) {}
     await metaRef().child(id).remove();
   }
@@ -200,7 +174,6 @@
     metaRef().on('value', snap => {
       const now = Date.now(), list = [];
       snap.forEach(ch => {
-        if (String(ch.key).startsWith('_diag')) return;
         const m = Object.assign({ id: ch.key }, ch.val()); m.url = safeUrl(m.url);
         if (now - (m.created || 0) > WEEK) remove(m.id, m); else list.push(m);
       });
