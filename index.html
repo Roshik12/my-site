@@ -104,6 +104,8 @@
     });
     // Anonymous sign-in: every read/write is tied to a signed-in session (see database.rules.json)
     window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); window.authErr = e; return null; });
+    // Safari sometimes never completes the websocket; long-polling is slower but always connects
+    try { if (/safari/i.test(navigator.userAgent) && !/chrome|chromium|crios|fxios|android/i.test(navigator.userAgent)) firebase.database.INTERNAL.forceLongPolling(); } catch (_) {}
     window.db = firebase.database();
     window.storage = firebase.storage();
   </script>
