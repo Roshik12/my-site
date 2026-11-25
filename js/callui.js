@@ -8,7 +8,7 @@
   const I = n => window.icon(n);
   const toast = m => (window.toast || window.showToast || console.log)(m);
   let room = null, title = '', audioOnly = false, audioOn = true, videoOn = true, incomingRoom = null;
-  const titles = {};
+  const titles = {}, dismissed = {}, lastTs = {};
 
   function build() {
     if ($('cuOverlay')) return;
@@ -16,7 +16,7 @@
     d.className = 'cm'; d.id = 'cuOverlay'; d.hidden = true;
     d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-labelledby', 'cuTitle');
     d.innerHTML = `<div class="cm-stage">
-        <video id="cuRemote" autoplay playsinline></video>
+        <div class="cm-grid" id="cuGrid"></div>
         <video id="cuLocal" class="cm-self" autoplay muted playsinline></video>
         <div class="cm-info"><div class="cm-avatar">${I('message-circle')}</div><h2 id="cuTitle">Call</h2><p id="cuStatus" role="status" aria-live="polite">Ready</p></div>
       </div>
@@ -50,19 +50,23 @@
     $('cuMute').innerHTML = I('mic'); $('cuCam').innerHTML = I('video');
     $('cuMute').classList.remove('off'); $('cuCam').classList.remove('off');
     if (state === 'idle') {
-      if (window.__cuReturnFocus) { try { window.__cuReturnFocus.focus(); } catch (_) {} window.__cuReturnFocus = null; } $('cuLocal').srcObject = null; $('cuRemote').srcObject = null; incomingRoom = null; }
+      if (window.__cuReturnFocus) { try { window.__cuReturnFocus.focus(); } catch (_) {} window.__cuReturnFocus = null; } $('cuLocal').srcObject = null; $('cuGrid').innerHTML = ''; incomingRoom = null; }
   }
 
   const handlers = () => ({
     onLocal: st => { $('cuLocal').srcObject = st; },
-    onRemote: st => { const v = $('cuRemote'); v.srcObject = st; v.play().catch(() => {}); },
-    onState: st => {
-      if (st === 'connected') { $('cuStatus').textContent = 'Connected'; $('cuOverlay').classList.add('live'); }
-      else if (st === 'connecting') $('cuStatus').textContent = 'Connecting…';
-      else if (st === 'disconnected') $('cuStatus').textContent = 'Connection unstable…';
+    onRemote: (id, st) => {
+      const g = $('cuGrid'); let v = g.querySelector('[data-peer="' + id + '"]');
+      if (!v) { v = document.createElement('video'); v.dataset.peer = id; v.autoplay = true; v.playsInline = true; g.appendChild(v); }
+      v.srcObject = st; v.play().catch(() => {});
+    },
+    onPeerLeft: id => { const v = $('cuGrid').querySelector('[data-peer="' + id + '"]'); if (v) v.remove(); },
+    onCount: n => { $('cuStatus').textContent = n > 1 ? n + ' people in this call' : 'Waiting for others to join…'; },
+    onState: (id, st) => {
+      if (st === 'connected') $('cuOverlay').classList.add('live');
     },
     onError: e => toast(e.message),
-    onEnded: remote => { ui('idle'); if (remote) toast('Call ended'); }
+    onEnded: () => ui('idle')
   });
 
   async function start(r, o) {
@@ -71,7 +75,7 @@
     $('cuTitle').textContent = title;
     $('cuStatus').textContent = o.status || 'Calling… waiting for someone to join';
     ui('ringing', audioOnly);
-    try { await videocall.start(r, !audioOnly, handlers()); }
+    try { const t = await videocall.start(r, !audioOnly, handlers()); if ((t === 'video') === audioOnly) { audioOnly = t !== 'video'; ui('ringing', audioOnly); } }
     catch (err) { ui('idle'); toast(err.message); }
   }
 
@@ -90,17 +94,19 @@
 
   function hangup() {
     if (videocall.inCall()) videocall.end();
-    else { if (incomingRoom) window.db.ref('groupcalls/' + incomingRoom).remove(); ui('idle'); }
+    else { if (incomingRoom) dismissed[incomingRoom] = lastTs[incomingRoom]; ui('idle'); }
   }
 
   function watch(r, t) {
     build(); titles[r] = t || r;
     videocall.watch(r, info => {
       if (videocall.inCall()) return;
+      if (info) lastTs[r] = info.ts;
+      if (info && dismissed[r] === info.ts) info = null;
       if (info) {
         incomingRoom = r; audioOnly = info.callType !== 'video';
         $('cuTitle').textContent = titles[r];
-        $('cuStatus').textContent = 'Incoming ' + (audioOnly ? 'voice' : 'video') + ' call';
+        $('cuStatus').textContent = 'Incoming ' + (audioOnly ? 'voice' : 'video') + ' call' + (info.count > 1 ? ' · ' + info.count + ' people' : '');
         ui('incoming', audioOnly);
       } else if (incomingRoom === r && !$('cuOverlay').hidden) ui('idle');
     });

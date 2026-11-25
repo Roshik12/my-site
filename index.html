@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8502973077423840"
+     crossorigin="anonymous"></script>
   <script src="js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QuickShare – Share notes, files and calls</title>
@@ -9,11 +11,12 @@
   <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="color-scheme" content="light dark">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
+  <script src="js/firebase-config.js"></script>
   <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
@@ -28,7 +31,16 @@
   </nav>
 
   <main class="stage" id="main">
-    <h1 class="greet">What are you <span class="grad">sharing</span> today?</h1>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 520 150" fill="none">
+        <path class="flow" d="M118 78 C170 20 210 20 260 62 S350 120 402 70" />
+        <g class="dev"><rect x="40" y="46" width="78" height="52" rx="7"/><rect x="30" y="98" width="98" height="7" rx="3.5"/></g>
+        <g class="dev note"><rect x="222" y="34" width="76" height="62" rx="10"/><path d="M238 54h44M238 68h44M238 82h26"/></g>
+        <g class="dev"><rect x="402" y="34" width="38" height="70" rx="8"/><circle cx="421" cy="94" r="2.5"/></g>
+        <circle class="pk" r="4"><animateMotion dur="3.6s" repeatCount="indefinite" path="M118 78 C170 20 210 20 260 62 S350 120 402 70"/></circle>
+      </svg>
+    </div>
+    <h1 class="greet">Share notes and files across <span class="grad">your devices</span></h1>
     <div class="composer" id="composer">
       <textarea id="editor" rows="4" placeholder="Write a note. It saves on its own and appears on every device on your network."></textarea>
       <div class="composer-bar">
@@ -40,12 +52,18 @@
         <span class="save-state"><i class="status-dot" id="statusDot"></i><span id="statusText">Connecting…</span></span>
       </div>
     </div>
+    <div class="notice" id="notice" role="alert" hidden><div><strong id="noticeTitle"></strong> <span id="noticeText"></span></div><button class="notice-x" id="noticeX" type="button" aria-label="Dismiss">×</button></div>
     <input type="file" id="fileInput" multiple hidden>
     <div class="chips">
       <a class="chip c-violet" href="chat.html"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-message-circle"/></svg> Open group chat</a>
       <a class="chip c-green" href="#calls"><svg class="ic " aria-hidden="true" focusable="false"><use href="#i-phone"/></svg> Start a call</a>
     </div>
-    <p class="meta">Your network <b id="ipDisplay">…</b> · <span id="expiryLabel">Saved for 7 days</span> · <b id="charCount">0</b> characters, <b id="wordCount">0</b> words</p>
+    <p class="meta"><span id="syncLabel">Your network</span> <b id="ipDisplay">…</b> · <button class="linkbtn" id="syncChange" type="button" aria-expanded="false" aria-controls="syncPop">Use a code instead</button> · <span id="expiryLabel">Saved for 7 days</span> · <b id="charCount">0</b> characters, <b id="wordCount">0</b> words</p>
+    <div class="sync-pop" id="syncPop" hidden>
+      <p>Devices on the <b>same Wi-Fi</b> sync automatically. On <b>different networks</b> (Wi-Fi and mobile data), use the same code on both devices. Notes, files and network calls then follow the code.</p>
+      <div class="row"><input id="syncInput" maxlength="9" placeholder="Enter code" autocomplete="off" aria-label="Sync code"><button class="pill primary" id="syncUse" type="button">Use code</button><button class="pill" id="syncNew" type="button">New code</button></div>
+      <button class="linkbtn" id="syncOff" type="button" hidden>Go back to network sync</button>
+    </div>
 
         <section class="calls" id="calls">
       <h2>Calls</h2>
@@ -76,20 +94,15 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyCXTttFelyoKUM5HxqCB-FRy7aydsuYhps",
-      authDomain: "quick-share-91c3b.firebaseapp.com",
-      databaseURL: "https://quick-share-91c3b-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "quick-share-91c3b",
-      storageBucket: "quick-share-91c3b.firebasestorage.app",
-      messagingSenderId: "1002255306494",
-      appId: "1:1002255306494:web:6cca2ce180720b48615faf"
-    });
+    firebase.initializeApp(window.FIREBASE_CONFIG);
     // Anonymous sign-in: every read/write is tied to a signed-in session (see database.rules.json)
-    window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); return null; });
+    window.authReady = firebase.auth().signInAnonymously().then(c => c.user).catch(e => { console.error('Anonymous sign-in failed', e); window.authErr = e; return null; });
+    // Safari sometimes never completes the websocket; long-polling is slower but always connects
+    try { if (/safari/i.test(navigator.userAgent) && !/chrome|chromium|crios|fxios|android/i.test(navigator.userAgent)) firebase.database.INTERNAL.forceLongPolling(); } catch (_) {}
     window.db = firebase.database();
     window.storage = firebase.storage();
   </script>
+  <script src="js/supabase-config.js"></script>
   <script src="js/fileStorage.js"></script>
   <script src="js/videocall.js"></script>
   <script src="js/callui.js"></script>
@@ -99,6 +112,7 @@
     let userIP = 'guest', dbRef = null, saveTimer = null, dirty = false;
     const CLIENT = localStorage.getItem('qs_client_id') || (() => { const v = 'c_' + Math.random().toString(36).slice(2, 10); localStorage.setItem('qs_client_id', v); return v; })();
     window.QS_CLIENT_ID = CLIENT;
+    const TAB = 'tab_' + Math.random().toString(36).slice(2, 10); // unique per tab, so tabs sync with each other
 
     function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(showToast.t); showToast.t = setTimeout(() => t.classList.remove('show'), 2400); }
     function setStatus(state, msg) { $('statusDot').className = 'status-dot ' + state; $('statusText').textContent = msg; }
@@ -110,40 +124,92 @@
       autosize();
     }
 
+    // ---- who am I syncing with? a typed code (works across networks) or the public IP (same Wi-Fi) ----
+    const SYNC_KEY = 'qs_sync_code';
+    const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const prettyCode = c => c.slice(0, 4) + '-' + c.slice(4);
+    const getCode = () => { let c = ''; try { c = normCode(localStorage.getItem(SYNC_KEY)); } catch (_) {} return c.length >= 6 ? c : ''; };
+    async function timedFetch(url, ms) { const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms); try { return await fetch(url, { signal: ac.signal, cache: 'no-store' }); } finally { clearTimeout(t); } }
+    async function detectIP() {
+      // our own server sees the same address for every device on one Wi-Fi (IPv6 cut to its network prefix)
+      try { const j = await (await timedFetch('/api/ip', 4000)).json(); if (j && j.ip && j.key) return { ip: j.ip, key: j.key }; } catch (_) {}
+      const tries = [
+        async () => (await (await timedFetch('https://api.ipify.org?format=json', 4000)).json()).ip,
+        async () => (await (await timedFetch('https://ipv4.icanhazip.com', 4000)).text()).trim()
+      ];
+      for (const t of tries) { try { const ip = await t(); if (/^[0-9a-fA-F:.]{3,45}$/.test(ip || '')) return { ip, key: ip.replace(/[.]/g, '_') }; } catch (_) {} }
+      return null;
+    }
+    function humanError(e) {
+      const m = (e && (e.code || e.message)) || String(e);
+      if (/PERMISSION_DENIED|permission/i.test(m)) return 'Blocked by Firebase rules. Turn on Anonymous sign-in and publish database.rules.json (see SECURITY.md).';
+      if (/operation-not-allowed/i.test(m)) return 'Anonymous sign-in is turned off in Firebase (Authentication, Sign-in method).';
+      if (/network|offline|timeout|abort/i.test(m)) return 'Network problem. Check your connection and try again.';
+      return (e && e.message) || 'Something went wrong';
+    }
+    function notice(title, text) { $('noticeTitle').textContent = title; $('noticeText').textContent = text; $('notice').hidden = false; }
+    $('noticeX').onclick = () => { $('notice').hidden = true; };
+
+    // quick self-check so a misconfigured Firebase shows a clear message instead of failing silently
+    async function selfCheck() {
+      if (!firebase.auth().currentUser) {
+        const code = window.authErr && window.authErr.code;
+        return notice('Sign-in problem:', code === 'auth/operation-not-allowed' ? 'Anonymous sign-in is turned off. Firebase, Authentication, Sign-in method, enable Anonymous, then reload.' : 'Could not sign in (' + (code || 'unknown') + '). Reload, or check Firebase Authentication.');
+      }
+      const id = '_diag' + Date.now().toString(36), bad = [];
+      try { await window.db.ref('files/' + userIP + '/' + id).set({ name: 'diag', size: 0, created: Date.now() }); await window.db.ref('files/' + userIP + '/' + id).remove(); } catch (e) { bad.push('file list'); }
+      try { await window.db.ref('filedata/' + userIP + '/' + id + '/0').set('x'); await window.db.ref('filedata/' + userIP + '/' + id).remove(); } catch (e) { bad.push('file storage'); }
+      if (bad.length) notice('Setup needed:', 'Firebase is blocking ' + bad.join(' and ') + '. Publish the latest database.rules.json in Realtime Database, Rules.');
+    }
+
     async function init() {
       await window.authReady;
       if (!firebase.auth().currentUser) setStatus('error', 'Sign-in failed');
-      try {
-        const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json();
-        userIP = d.ip.replace(/\./g, '_'); $('ipDisplay').textContent = d.ip;
-      } catch (e) { userIP = 'guest_' + Math.random().toString(36).slice(2, 8); $('ipDisplay').textContent = 'guest session'; }
+      const code = getCode();
+      if (code) {
+        userIP = 'c_' + code; $('syncLabel').textContent = 'Synced by code'; $('ipDisplay').textContent = prettyCode(code);
+        $('syncChange').textContent = 'Change code'; $('syncOff').hidden = false;
+      } else {
+        const ip = await detectIP();
+        if (ip) { userIP = ip.key; $('ipDisplay').textContent = ip.ip; }
+        else { userIP = 'dev_' + CLIENT.replace(/[^A-Za-z0-9_]/g, ''); $('syncLabel').textContent = 'Could not detect your network:'; $('ipDisplay').textContent = 'use a code to sync devices'; }
+      }
       window.userIP = userIP;
       window.fileStorage.init(userIP);
       callUI.watch('ip~' + userIP, 'Your network');
+      selfCheck();
       dbRef = window.db.ref('saves/' + userIP);
       setStatus('saving', 'Loading…');
       let first = true;
+      // watchdog: if the database never answers (some Safari tabs stall), reconnect a few times, then say so
+      let tries = 0;
+      const watchdog = setInterval(() => {
+        if (!first) return clearInterval(watchdog);
+        if (++tries > 3) { clearInterval(watchdog); setStatus('error', 'Cannot reach database'); return notice('Could not connect:', 'Reload this tab, turn off content blockers, or use a sync code.'); }
+        setStatus('saving', 'Reconnecting…');
+        try { window.db.goOffline(); setTimeout(() => window.db.goOnline(), 300); } catch (_) {}
+      }, 8000);
       // live: fires on load and whenever any device on this network edits the note
       dbRef.on('value', snap => {
         const d = snap.val();
         if (d && d.timestamp && Date.now() - d.timestamp > WEEK) { dbRef.remove(); return; }
         if (first) { first = false; setStatus('synced', 'Ready'); }
         const text = d ? (d.text || '') : '';
-        const mine = d && d.by === CLIENT;
+        const mine = d && d.by === TAB;
         if (d) $('expiryLabel').textContent = 'Expires ' + new Date((d.timestamp || Date.now()) + WEEK).toLocaleDateString();
         if (mine || dirty || text === editor.value) return;
         const s0 = editor.selectionStart, s1 = editor.selectionEnd, focused = document.activeElement === editor;
         editor.value = text; stats();
         if (focused) editor.setSelectionRange(Math.min(s0, text.length), Math.min(s1, text.length));
         setStatus('synced', 'Updated from another device'); pulse();
-      }, () => setStatus('error', 'Could not load'));
+      }, e => { setStatus('error', 'Could not load'); notice('Could not load:', humanError(e)); });
     }
 
     function pulse() { const c = $('composer'); c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); }
     editor.addEventListener('input', () => {
       stats(); dirty = true; setStatus('saving', 'Saving…'); clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => dbRef && dbRef.set({ text: editor.value, timestamp: Date.now(), by: CLIENT })
-        .then(() => { dirty = false; setStatus('synced', 'Saved'); }).catch(() => setStatus('error', 'Save failed')), 350);
+      saveTimer = setTimeout(() => dbRef && dbRef.set({ text: editor.value, timestamp: Date.now(), by: TAB })
+        .then(() => { dirty = false; setStatus('synced', 'Saved'); }).catch(e => { setStatus('error', 'Save failed'); notice('Could not save:', humanError(e)); }), 350);
     });
     $('copyBtn').onclick = async () => { if (!editor.value) return; try { await navigator.clipboard.writeText(editor.value); showToast('Copied'); } catch { showToast('Copy failed'); } };
     $('clearBtn').onclick = () => { if (editor.value && confirm('Clear this note?')) { editor.value = ''; stats(); dirty = false; dbRef && dbRef.remove(); setStatus('synced', 'Cleared'); } };
@@ -152,8 +218,9 @@
     // files: attach button, drop anywhere, paste
     function handleFiles(files) {
       Array.from(files).forEach(f => {
-        if (f.size > 50 * 1024 * 1024) return showToast('File is over 50MB');
-        window.fileStorage.uploadFile(f).then(() => showToast('Uploaded ' + f.name)).catch(e => showToast(e.message || 'Upload failed'));
+        const maxMB = (window.SUPABASE && window.SUPABASE.url && window.SUPABASE.maxMB) || 50;
+        if (f.size > maxMB * 1024 * 1024) return showToast('File is over ' + maxMB + 'MB');
+        window.fileStorage.uploadFile(f).then(() => showToast('Uploaded ' + f.name)).catch(e => showToast(humanError(e)));
       });
     }
     $('attachBtn').onclick = () => $('fileInput').click();
@@ -183,6 +250,17 @@
       callUI.join('code~' + c, { title: 'Code ' + pretty(c) });
     };
     $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('codeJoin').click(); });
+    // sync code popover (works across different networks / mobile data)
+    function setCode(c) { try { if (c) localStorage.setItem(SYNC_KEY, c); else localStorage.removeItem(SYNC_KEY); } catch (_) {} location.reload(); }
+    $('syncChange').onclick = () => { const p = $('syncPop'); p.hidden = !p.hidden; $('syncChange').setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) $('syncInput').focus(); };
+    $('syncUse').onclick = () => { const c = normCode($('syncInput').value); if (c.length < 6) return showToast('Enter a code with at least 6 letters or numbers'); setCode(c); };
+    $('syncNew').onclick = () => {
+      let c = ''; for (let i = 0; i < 8; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+      try { navigator.clipboard.writeText(prettyCode(c)); } catch (_) {}
+      showToast('Code ' + prettyCode(c) + ' copied. Enter it on your other device.'); setTimeout(() => setCode(c), 1200);
+    };
+    $('syncInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('syncUse').click(); });
+    $('syncOff').onclick = () => setCode('');
     init();
   </script>
 <script src="js/theme.js"></script>

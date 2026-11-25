@@ -3,7 +3,7 @@
    Slots with no id stay hidden (no empty boxes). Ads never load on localhost. */
 (function () {
   var CONFIG = {
-    client: '',                // e.g. 'ca-pub-1234567890123456'
+    client: 'ca-pub-8502973077423840',   // your AdSense publisher id (public, safe to commit)
     slots: {
       'home-mid': '',          // between Calls and Files on the home page
       'home-bottom': '',       // bottom of the home page
@@ -22,11 +22,14 @@
     new MutationObserver(function () { if (ins.getAttribute('data-ad-status') === 'unfilled') el.hidden = true; }).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
   });
   if (!used) return;
+  function pushAll() {
+    document.querySelectorAll('.ad-slot:not([hidden]) ins.adsbygoogle').forEach(function () { try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} });
+  }
+  // index.html already loads adsbygoogle.js in <head>; never load it twice
+  if (document.querySelector('script[src*="adsbygoogle.js"]')) { pushAll(); return; }
   var s = document.createElement('script');
   s.async = true; s.crossOrigin = 'anonymous';
   s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(CONFIG.client);
-  s.onload = function () {
-    document.querySelectorAll('.ad-slot:not([hidden]) ins.adsbygoogle').forEach(function () { try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} });
-  };
+  s.onload = pushAll;
   document.head.appendChild(s);
 })();
