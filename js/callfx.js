@@ -6,7 +6,7 @@
   const COLORS = ['#00f3ff', '#ff00e6', '#39ff14', '#fff01f', '#ff5e00', '#bc13fe'], ERASE_R = 44;
   let color = COLORS[0], size = 7, mode = 'DRAW';
   let hands, face, vid, cv, cx, ink, ix, track, raf, ui, st, on = false, busy = false, tf = 0;
-  let last = null, cur = null, buf = [], hand = null, mouth = null, charge = 0, smoke = [];
+  let frames = 0, last = null, cur = null, buf = [], hand = null, mouth = null, charge = 0, smoke = [];
   const libs = {};
 
   const load = (name, file) => libs[name] || (libs[name] = new Promise((ok, no) => {
@@ -26,6 +26,7 @@
   }
 
   function onHand(r) {
+    frames++;
     const l = r.multiHandLandmarks && r.multiHandLandmarks[0];
     if (!l) { last = cur = hand = null; buf = []; return say(false); }
     const W = cv.width, H = cv.height;
@@ -88,39 +89,51 @@
     cx.fillRect(hand.L * .85, -H * .01, hand.L * .15, H * .02); cx.restore();
   }
 
-  function say(h) { if (st) st.textContent = h ? 'Hand ✓' + (mode === 'HOOKAH' ? ' · puff ' + Math.round(charge) + '%' : '') : 'Show your hand to the camera'; }
+  function say(h) { if (st) st.textContent = (h ? 'Hand ✓' + (mode === 'HOOKAH' ? ' · puff ' + Math.round(charge) + '%' : '') : 'Show your hand to the camera') + ' · AI ' + frames; }
 
   function tick() {
     if (!on) return;
-    cx.drawImage(vid, 0, 0, cv.width, cv.height);
-    if (mode === 'DRAW') {
-      cx.drawImage(ink, 0, 0);
-      if (cur) { cx.beginPath(); cx.arc(cur.x, cur.y, cur.g === 'ERASE' ? ERASE_R : size + 4, 0, 7); cx.strokeStyle = cur.g === 'ERASE' ? '#fb7185' : cur.g === 'DRAW' ? color : '#fbbf24'; cx.lineWidth = 2; cx.stroke(); }
-    } else hookah();
-    if (!busy) {
-      busy = true;
-      (async () => {
-        try { await hands.send({ image: vid }); if (mode === 'HOOKAH' && face && (tf++ & 1) === 0) await face.send({ image: vid }); } catch (_) {}
-        busy = false;
-      })();
-    }
+    try {
+      cx.drawImage(vid, 0, 0, cv.width, cv.height);
+      if (mode === 'DRAW') {
+        cx.drawImage(ink, 0, 0);
+        if (cur) { cx.beginPath(); cx.arc(cur.x, cur.y, cur.g === 'ERASE' ? ERASE_R : size + 4, 0, 7); cx.strokeStyle = cur.g === 'ERASE' ? '#fb7185' : cur.g === 'DRAW' ? color : '#fbbf24'; cx.lineWidth = 2; cx.stroke(); }
+      } else hookah();
+      if (!busy) {
+        busy = true;
+        (async () => {
+          try { await hands.send({ image: vid }); if (mode === 'HOOKAH' && face && (tf++ & 1) === 0) await face.send({ image: vid }); }
+          catch (e) { if (st) st.textContent = 'Tracking error: ' + (e.message || e); }
+          busy = false;
+        })();
+      }
+    } catch (e) { if (st) st.textContent = 'Effect error: ' + e.message; }
     raf = requestAnimationFrame(tick);
   }
 
   const fire = v => window.dispatchEvent(new CustomEvent('callfx', { detail: v }));
   function hl() { if (ui) ui.querySelectorAll('[data-mode]').forEach(b => { b.style.background = b.dataset.mode === (on ? mode : 'OFF') ? 'rgba(255,255,255,.38)' : 'rgba(255,255,255,.1)'; }); }
 
+  const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error(msg)), ms))]);
+
+  async function ensureFace() {
+    if (face) return;
+    await load('face_mesh', 'face_mesh.js');
+    const f = new window.FaceMesh({ locateFile: x => CDN + 'face_mesh/' + x });
+    f.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: .55, minTrackingConfidence: .55 });
+    f.onResults(onFace);
+    await withTimeout(f.initialize(), 25000, 'Face tracking took too long to load');
+    face = f;
+  }
+
   async function setMode(m) {
-    mode = m; last = cur = null; buf = []; hl();
-    if (m === 'HOOKAH' && !face) {
+    if (m === 'HOOKAH' && !face && on) {
       if (st) st.textContent = 'Loading face tracking…';
-      try {
-        await load('face_mesh', 'face_mesh.js');
-        face = new window.FaceMesh({ locateFile: f => CDN + 'face_mesh/' + f });
-        face.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: .55, minTrackingConfidence: .55 });
-        face.onResults(onFace);
-      } catch (e) { mode = 'DRAW'; if (st) st.textContent = e.message; }
+      videocall.setVideoTrack(videocall.cameraTrack()); // keep sending your normal camera while it loads
+      try { await ensureFace(); } catch (e) { if (st) st.textContent = e.message; m = mode; }
+      if (track) videocall.setVideoTrack(track);
     }
+    mode = m; last = cur = null; buf = []; hl();
   }
 
   function panel() {
@@ -128,6 +141,7 @@
     ui = document.createElement('div');
     ui.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:2147483000;display:none;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:94vw;padding:8px 12px;border-radius:16px;background:rgba(15,15,25,.88);border:1px solid rgba(255,255,255,.18);color:#fff;font:12px system-ui,sans-serif';
     ui.style.display = 'none';
+    document.addEventListener('securitypolicyviolation', e => { if (st && /jsdelivr|eval|blob|wasm/i.test(e.blockedURI + e.violatedDirective + e.sourceFile)) st.textContent = 'Blocked by site policy: ' + e.violatedDirective + ' <- ' + (e.blockedURI || 'eval'); });
     const mk = (t, fn, extra) => { const b = document.createElement('button'); b.textContent = t; b.onclick = fn; b.style.cssText = 'border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:5px 9px;font:inherit;cursor:pointer'; Object.assign(b.dataset, extra || {}); return b; };
     const sw = COLORS.map(c => { const b = document.createElement('button'); b.setAttribute('aria-label', 'Color ' + c); b.style.cssText = `width:22px;height:22px;padding:0;border-radius:50%;cursor:pointer;background:${c};border:2px solid ${c === color ? '#fff' : '#fff3'}`; b.onclick = () => { color = c; sw.forEach(x => x.style.borderColor = x === b ? '#fff' : '#fff3'); }; return b; });
     const rg = document.createElement('input'); rg.type = 'range'; rg.min = 2; rg.max = 24; rg.value = size; rg.style.width = '70px'; rg.setAttribute('aria-label', 'Brush size'); rg.oninput = () => { size = +rg.value; };
@@ -139,23 +153,30 @@
 
   async function start(m) {
     if (on) return setMode(m);
-    mode = m;
     const cam = window.videocall && videocall.cameraTrack();
     if (!cam) throw new Error('Start a video call first');
+    // Everything heavy loads BEFORE we touch your outgoing video, so the call never freezes while it loads
+    if (st) st.textContent = 'Loading hand tracking…';
     await load('hands', 'hands.js');
     if (!hands) {
-      hands = new window.Hands({ locateFile: f => CDN + 'hands/' + f });
-      hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: .6, minTrackingConfidence: .6 });
-      hands.onResults(onHand);
+      const h = new window.Hands({ locateFile: f => CDN + 'hands/' + f });
+      h.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: .6, minTrackingConfidence: .6 });
+      h.onResults(onHand);
+      await withTimeout(h.initialize(), 25000, 'Hand tracking took too long to load');
+      hands = h;
     }
+    if (m === 'HOOKAH') { if (st) st.textContent = 'Loading face tracking…'; await ensureFace(); }
     vid = document.createElement('video'); vid.muted = true; vid.playsInline = true;
     vid.srcObject = new MediaStream([cam]); await vid.play();
     cv = document.createElement('canvas'); cv.width = vid.videoWidth || 1280; cv.height = vid.videoHeight || 720;
     ink = document.createElement('canvas'); ink.width = cv.width; ink.height = cv.height;
     cx = cv.getContext('2d'); ix = ink.getContext('2d');
+    frames = 0;
+    await withTimeout(hands.send({ image: vid }), 15000, 'Hand tracking did not respond'); // test one frame first
     track = cv.captureStream(30).getVideoTracks()[0]; track.contentHint = 'motion';
-    on = true; last = cur = hand = mouth = null; buf = []; charge = 0; smoke = [];
-    setMode(mode); say(false);
+    mode = m; on = true; last = cur = hand = mouth = null; buf = []; charge = 0; smoke = [];
+    hl(); say(false);
+    cx.drawImage(vid, 0, 0, cv.width, cv.height);
     videocall.setVideoTrack(track);
     tick(); fire(true);
   }
