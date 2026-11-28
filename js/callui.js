@@ -24,11 +24,20 @@
         <button class="cm-btn cm-ok" id="cuAccept" aria-label="Accept call" hidden>${I('phone')}</button>
         <button class="cm-btn" id="cuMute" aria-label="Mute microphone" aria-pressed="false">${I('mic')}</button>
         <button class="cm-btn" id="cuCam" aria-label="Turn camera off" aria-pressed="false">${I('video')}</button>
+        <button class="cm-btn" id="cuFx" aria-label="Turn on air-drawing effect" aria-pressed="false">${I('sparkles')}</button>
         <button class="cm-btn cm-end" id="cuEnd" aria-label="End or decline call">${I('phone-off')}</button>
       </div>`;
     document.body.appendChild(d);
     $('cuAccept').onclick = accept;
     $('cuEnd').onclick = hangup;
+    $('cuFx').onclick = async () => {
+      try {
+        const on = await callfx.toggle();
+        $('cuFx').classList.toggle('off', !on); $('cuFx').setAttribute('aria-pressed', String(on));
+        $('cuFx').setAttribute('aria-label', on ? 'Turn off air-drawing effect' : 'Turn on air-drawing effect');
+        if (on) toast('Air drawing: 1 finger = draw, open palm = erase');
+      } catch (e) { toast(e.message || 'Effect unavailable'); }
+    };
     $('cuMute').onclick = () => { audioOn = !audioOn; videocall.toggleAudio(audioOn); $('cuMute').innerHTML = I(audioOn ? 'mic' : 'mic-off'); $('cuMute').classList.toggle('off', !audioOn); $('cuMute').setAttribute('aria-pressed', String(!audioOn)); $('cuMute').setAttribute('aria-label', audioOn ? 'Mute microphone' : 'Unmute microphone'); };
     $('cuCam').onclick = () => { videoOn = !videoOn; videocall.toggleVideo(videoOn); $('cuCam').innerHTML = I(videoOn ? 'video' : 'video-off'); $('cuCam').classList.toggle('off', !videoOn); $('cuCam').setAttribute('aria-pressed', String(!videoOn)); $('cuCam').setAttribute('aria-label', videoOn ? 'Turn camera off' : 'Turn camera on'); };
     addEventListener('beforeunload', () => { if (videocall.inCall()) videocall.end(); });
@@ -47,7 +56,7 @@
     $('cuMute').hidden = state === 'incoming';
     $('cuCam').hidden = state === 'incoming' || !!ao;
     audioOn = videoOn = true;
-    $('cuMute').innerHTML = I('mic'); $('cuCam').innerHTML = I('video');
+    $('cuMute').innerHTML = I('mic'); $('cuCam').innerHTML = I('video'); $('cuFx').classList.remove('off'); $('cuFx').setAttribute('aria-pressed', 'false');
     $('cuMute').classList.remove('off'); $('cuCam').classList.remove('off');
     if (state === 'idle') {
       if (window.__cuReturnFocus) { try { window.__cuReturnFocus.focus(); } catch (_) {} window.__cuReturnFocus = null; } $('cuLocal').srcObject = null; $('cuGrid').innerHTML = ''; incomingRoom = null; }

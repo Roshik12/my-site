@@ -30,7 +30,7 @@
 
   const MAX = 6; // full mesh: every person connects to every other, so keep it small
   const peerId = 'p_' + Math.random().toString(36).slice(2, 10);
-  let localStream = null, gid = null, joined = false, peers = {};
+  let localStream = null, camTrack = null, gid = null, joined = false, peers = {};
   let listeners = [], handlers = {};
 
   const db = () => window.db;
@@ -119,6 +119,7 @@
     try {
       await loadTurn();
       localStream = await getMedia(withVideo);
+      camTrack = localStream.getVideoTracks()[0] || null; // the real camera, kept so effects can swap it
       handlers.onLocal && handlers.onLocal(localStream);
       on(callRef().child('signals/' + peerId), 'child_added', onSignal);
       const me = callRef().child('members/' + peerId);
@@ -175,7 +176,9 @@
   function cleanup() {
     offAll();
     Object.keys(peers).forEach(id => { peers[id].pc.onconnectionstatechange = null; peers[id].pc.close(); }); peers = {};
+    try { window.callfx && callfx.reset(); } catch (_) {}
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    if (camTrack) { camTrack.stop(); camTrack = null; }
     joined = false;
     const h = handlers; handlers = {}; gid = null;
     h.onEnded && h.onEnded(false);
@@ -193,8 +196,18 @@
     } catch (_) {}
   }
 
+  // swap the outgoing video (used by call effects); the camera track itself stays alive
+  function setVideoTrack(t) {
+    if (!localStream || !t) return false;
+    localStream.getVideoTracks().forEach(o => localStream.removeTrack(o));
+    localStream.addTrack(t);
+    Object.values(peers).forEach(p => p.pc.getSenders().forEach(sn => { if (sn.track && sn.track.kind === 'video') sn.replaceTrack(t).catch(() => {}); }));
+    handlers.onLocal && handlers.onLocal(localStream);
+    return true;
+  }
+
   const toggleAudio = v => localStream && localStream.getAudioTracks().forEach(t => t.enabled = v);
   const toggleVideo = v => localStream && localStream.getVideoTracks().forEach(t => t.enabled = v);
 
-  window.videocall = { start, answer, watch, unwatch, end, toggleAudio, toggleVideo, inCall: () => joined, max: MAX };
+  window.videocall = { setVideoTrack, cameraTrack: () => camTrack, start, answer, watch, unwatch, end, toggleAudio, toggleVideo, inCall: () => joined, max: MAX };
 })();
