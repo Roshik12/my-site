@@ -107,9 +107,11 @@
     raf = requestAnimationFrame(tick);
   }
 
+  const fire = v => window.dispatchEvent(new CustomEvent('callfx', { detail: v }));
+  function hl() { if (ui) ui.querySelectorAll('[data-mode]').forEach(b => { b.style.background = b.dataset.mode === (on ? mode : 'OFF') ? 'rgba(255,255,255,.38)' : 'rgba(255,255,255,.1)'; }); }
+
   async function setMode(m) {
-    mode = m; last = cur = null; buf = [];
-    if (ui) ui.querySelectorAll('[data-mode]').forEach(b => { b.style.background = b.dataset.mode === m ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.1)'; });
+    mode = m; last = cur = null; buf = []; hl();
     if (m === 'HOOKAH' && !face) {
       if (st) st.textContent = 'Loading face tracking…';
       try {
@@ -125,17 +127,19 @@
     if (ui) return ui;
     ui = document.createElement('div');
     ui.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:2147483000;display:none;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:94vw;padding:8px 12px;border-radius:16px;background:rgba(15,15,25,.88);border:1px solid rgba(255,255,255,.18);color:#fff;font:12px system-ui,sans-serif';
+    ui.style.display = 'none';
     const mk = (t, fn, extra) => { const b = document.createElement('button'); b.textContent = t; b.onclick = fn; b.style.cssText = 'border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:5px 9px;font:inherit;cursor:pointer'; Object.assign(b.dataset, extra || {}); return b; };
     const sw = COLORS.map(c => { const b = document.createElement('button'); b.setAttribute('aria-label', 'Color ' + c); b.style.cssText = `width:22px;height:22px;padding:0;border-radius:50%;cursor:pointer;background:${c};border:2px solid ${c === color ? '#fff' : '#fff3'}`; b.onclick = () => { color = c; sw.forEach(x => x.style.borderColor = x === b ? '#fff' : '#fff3'); }; return b; });
     const rg = document.createElement('input'); rg.type = 'range'; rg.min = 2; rg.max = 24; rg.value = size; rg.style.width = '70px'; rg.setAttribute('aria-label', 'Brush size'); rg.oninput = () => { size = +rg.value; };
     st = document.createElement('span'); st.style.opacity = '.8';
-    ui.append(...sw, rg, mk('✏️ Neon', () => setMode('DRAW'), { mode: 'DRAW' }), mk('💨 Hookah', () => setMode('HOOKAH'), { mode: 'HOOKAH' }), mk('Clear', () => { ix && ix.clearRect(0, 0, ink.width, ink.height); smoke = []; }), st);
-    document.body.appendChild(ui);
+    ui.append(mk('Off', () => pick('OFF'), { mode: 'OFF' }), mk('✏️ Neon draw', () => pick('DRAW'), { mode: 'DRAW' }), mk('💨 Hookah', () => pick('HOOKAH'), { mode: 'HOOKAH' }), ...sw, rg, mk('Clear', () => { ix && ix.clearRect(0, 0, ink.width, ink.height); smoke = []; }), st);
+    document.body.appendChild(ui); hl();
     return ui;
   }
 
-  async function toggle() {
-    if (on) { stop(); return false; }
+  async function start(m) {
+    if (on) return setMode(m);
+    mode = m;
     const cam = window.videocall && videocall.cameraTrack();
     if (!cam) throw new Error('Start a video call first');
     await load('hands', 'hands.js');
@@ -151,21 +155,29 @@
     cx = cv.getContext('2d'); ix = ink.getContext('2d');
     track = cv.captureStream(30).getVideoTracks()[0]; track.contentHint = 'motion';
     on = true; last = cur = hand = mouth = null; buf = []; charge = 0; smoke = [];
-    panel().style.display = 'flex'; setMode(mode); say(false);
+    setMode(mode); say(false);
     videocall.setVideoTrack(track);
-    tick();
-    return true;
+    tick(); fire(true);
   }
 
   // silent=true when the whole call is ending (videocall handles its own tracks)
   function stop(silent) {
     if (!on && !track) return;
     on = false; cancelAnimationFrame(raf);
-    if (ui) ui.style.display = 'none';
+    if (ui && silent) ui.style.display = 'none';
+    fire(false); hl();
     if (!silent && window.videocall) { const cam = videocall.cameraTrack(); if (cam) videocall.setVideoTrack(cam); }
     if (track) { track.stop(); track = null; }
     if (vid) { vid.srcObject = null; vid = null; }
   }
 
-  window.callfx = { toggle, reset: () => stop(true), isOn: () => on };
+  // the sparkle button opens/closes the filter chooser immediately (nothing has to load first)
+  function menu() { const p = panel(); const open = p.style.display === 'none'; p.style.display = open ? 'flex' : 'none'; return open; }
+  async function pick(m) {
+    try { if (m === 'OFF') stop(); else { if (st) st.textContent = 'Loading…'; await start(m); } }
+    catch (e) { if (st) st.textContent = e.message || 'Effect unavailable'; }
+    hl();
+  }
+
+  window.callfx = { menu, pick, reset: () => stop(true), isOn: () => on };
 })();

@@ -30,14 +30,8 @@
     document.body.appendChild(d);
     $('cuAccept').onclick = accept;
     $('cuEnd').onclick = hangup;
-    $('cuFx').onclick = async () => {
-      try {
-        const on = await callfx.toggle();
-        $('cuFx').classList.toggle('off', !on); $('cuFx').setAttribute('aria-pressed', String(on));
-        $('cuFx').setAttribute('aria-label', on ? 'Turn off air-drawing effect' : 'Turn on air-drawing effect');
-        if (on) toast('Air drawing: 1 finger = draw, open palm = erase');
-      } catch (e) { toast(e.message || 'Effect unavailable'); }
-    };
+    $('cuFx').onclick = () => { try { callfx.menu(); } catch (e) { toast(e.message || 'Effects unavailable'); } };
+    window.addEventListener('callfx', e => { $('cuFx').classList.toggle('off', !!e.detail); $('cuFx').setAttribute('aria-pressed', String(!!e.detail)); });
     $('cuMute').onclick = () => { audioOn = !audioOn; videocall.toggleAudio(audioOn); $('cuMute').innerHTML = I(audioOn ? 'mic' : 'mic-off'); $('cuMute').classList.toggle('off', !audioOn); $('cuMute').setAttribute('aria-pressed', String(!audioOn)); $('cuMute').setAttribute('aria-label', audioOn ? 'Mute microphone' : 'Unmute microphone'); };
     $('cuCam').onclick = () => { videoOn = !videoOn; videocall.toggleVideo(videoOn); $('cuCam').innerHTML = I(videoOn ? 'video' : 'video-off'); $('cuCam').classList.toggle('off', !videoOn); $('cuCam').setAttribute('aria-pressed', String(!videoOn)); $('cuCam').setAttribute('aria-label', videoOn ? 'Turn camera off' : 'Turn camera on'); };
     addEventListener('beforeunload', () => { if (videocall.inCall()) videocall.end(); });
